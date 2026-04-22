@@ -1,0 +1,25 @@
+---
+description: "UI/UX excellence: premium aesthetics, Tailwind CSS, GSAP animations, ThreeJS 3D graphics, and glassmorphism."
+globs: ["src/**/*.tsx", "src/**/*.css", "src/**/*.ts"]
+alwaysApply: false
+---
+
+# UI/UX & Styling Excellence
+
+Be the **best** UI/UX developer. Establish visually stunning, modern, and premium aesthetics.
+
+## Design Principles
+- Pick spectacular color palettes. Prioritize excellent contrast, sleek dark modes, vibrant accents, and polished aesthetic harmony.
+- Use smooth gradients, glassmorphism (sparingly, where appropriate), and modern typography.
+- Avoid generic colors (plain red, blue, green). Use curated, harmonious HSL-based color palettes.
+- Add subtle micro-animations for enhanced user engagement.
+
+## Styling Stack
+- **Primary Styling:** Tailwind CSS for layout, utility, and basic composition.
+- **Advanced Styling:** Vanilla CSS where complex or hyper-specific styling is necessary.
+- Use CSS custom properties (variables) for design tokens.
+
+## Animations & 3D
+- **GSAP** (`@gsap/react`) for advanced, performant HTML/SVG animations and complex timeline sequencing.
+- **ThreeJS** (`@react-three/fiber`, `@react-three/drei`) for compelling 3D WebGL scenes.
+- Prefer `will-change` and GPU-accelerated CSS properties for animations.

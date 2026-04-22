@@ -1,0 +1,32 @@
+---
+description: "Tech stack guidelines: Bun as package manager, React 18+, TypeScript strict mode, Tailwind CSS, GSAP, ThreeJS."
+alwaysApply: true
+---
+
+# Tech Stack Guidelines
+
+## Package Manager / Runtime
+- **Bun** — use `bun` for all installs, scripts, and execution (NOT npm or yarn).
+- Run scripts via `bun run <script>`, install via `bun add <package>`.
+
+## Framework & Language
+- **Framework:** React 18+ (Vite-based)
+- **Language:** TypeScript (strict mode preferred — `"strict": true` in tsconfig)
+- **Entry Point:** `src/main.tsx`
+
+## Styling
+- **Primary:** Tailwind CSS utility classes for layout and common styles.
+- **Advanced:** Vanilla CSS / CSS Modules for complex, animation, or highly specific styles.
+- **Design Tokens:** CSS custom properties (`--color-*`, `--spacing-*`).
+
+## Animations & Graphics
+- **GSAP** (`@gsap/react`, `gsap`) — for DOM/SVG timeline animations.
+- **React Three Fiber** (`@react-three/fiber`, `@react-three/drei`) — for WebGL/3D.
+- **Framer Motion** — optional, for simpler UI transitions.
+
+## Key Dependencies
+- `react`, `react-dom` — core
+- `typescript` — language
+- `tailwindcss` — styling
+- `gsap`, `@gsap/react` — animations
+- `three`, `@react-three/fiber`, `@react-three/drei` — 3D graphics

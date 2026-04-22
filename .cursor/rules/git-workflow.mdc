@@ -1,0 +1,41 @@
+---
+description: "Git workflow: Conventional Commits format, prompt-to-commit after milestones, sequential git add/commit/push."
+alwaysApply: false
+---
+
+# GitHub Workflow Rules (IMPORTANT)
+
+## Commit Prompting
+After every significant edit, major refactor, or successful milestone completion, you **MUST** explicitly ask the user:
+> *"Would you like me to commit and push these updates to GitHub?"*
+
+## Executing the Push
+If the user agrees, run the following commands **sequentially**:
+```bash
+git add .
+git commit -m "<conventional commit message>"
+git push
+```
+
+## Commit Message Format (Conventional Commits)
+Write the **best**, most concise yet descriptive commit messages:
+
+```
+feat: added ThreeJS hero section with GSAP scroll animations
+fix: corrected GSAP timeline alignment on mobile viewport
+refactor: optimized SEO metadata with Open Graph tags
+style: updated color palette to use HSL design tokens
+perf: lazy-loaded 3D assets to improve LCP score
+docs: updated README with new tech stack and setup instructions
+```
+
+### Commit Types
+- `feat:` — new feature or component
+- `fix:` — bug fix
+- `refactor:` — code restructuring without feature change
+- `style:` — styling/UI-only changes
+- `perf:` — performance improvement
+- `docs:` — documentation update
+- `chore:` — build config, deps, tooling
+
+Make changes understandable at a glance from the commit log.

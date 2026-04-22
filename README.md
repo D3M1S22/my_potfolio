@@ -1,46 +1,48 @@
-# Getting Started with Create React App
+# My Portfolio Web Experience
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A cutting-edge, highly interactive web portfolio project focusing on phenomenal UI/UX, optimal performance, and modern web aesthetics. This repository serves as the foundation for creating an immersive, SEO-optimized, and animation-rich developer portfolio.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+- **Immersive 3D Graphics**: Leveraging the power of `@react-three/fiber` and `three.js` to create engaging interactive WebGL scenes.
+- **Silky Smooth Animations**: Complex motion sequences, timeline management, and micro-interactions powered by **GSAP** and `@gsap/react`.
+- **Premium UI/UX Design**: Built with an eye for exceptional aesthetics, beautiful color palettes, smooth gradients, and elegant typography.
+- **Optimized for SEO & Accessibility**: Adheres to strict web standards, utilizing semantic HTML, proper header structures, metadata, and ARIA labels.
+- **Performance First**: Built with efficient asset loading practices and fully responsive design using **Tailwind CSS**.
+- **Type-Safe**: Written primarily in rigorous TypeScript to ensure an error-free, maintainable codebase.
 
-### `npm start`
+## 🛠 Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Framework**: React 18+
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **3D Engine**: ThreeJS, React Three Fiber, React Three Drei
+- **Animations**: GSAP
+- **Package Manager**: Bun
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🚀 Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Make sure you have [Bun](https://bun.sh/) installed on your machine for the fastest dependency resolution and script execution.
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository and install dependencies:
+   ```bash
+   bun install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Start the development server:
+   ```bash
+   bun start
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-### `npm run eject`
+## 📖 Development Guidelines
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+This project uses an automated AI-assisted setup geared around `Cursor IDE`. Detailed development philosophies concerning 3D implementations, aesthetic standards, UI decisions, SEO best practices, and GitHub workflows are outlined in `.cursorrules`.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **To deploy**: Run `bun run build`.
+- **Testing**: Run `bun test` to launch the test runner.

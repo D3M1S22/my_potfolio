@@ -1,0 +1,30 @@
+---
+description: "SEO, accessibility, and performance best practices: semantic HTML5, Core Web Vitals, ARIA, lazy loading."
+globs: ["src/**/*.tsx", "src/**/*.html", "index.html"]
+alwaysApply: false
+---
+
+# SEO, Performance & Web Best Practices
+
+Every new page or component must factor in SEO and performance.
+
+## Semantic HTML5
+- Always use proper semantic structural tags: `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<header>`, `<footer>`.
+- Ensure there is precisely **one `<h1>`** per page, with a strictly logical heading hierarchy (`<h2>`, `<h3>`).
+- Use descriptive, unique `id` attributes on interactive elements.
+
+## Accessibility
+- Optimize accessibility: proper ARIA labels, descriptive `alt` text for all media elements.
+- Maintain high contrast ratios (WCAG AA minimum).
+- Ensure keyboard navigability for all interactive elements.
+
+## Performance (Core Web Vitals)
+- Favor lazy loading (`React.lazy` / `Suspense`) for heavy 3D assets and large images.
+- Optimize for LCP, CLS, and FID/INP metrics.
+- Use `loading="lazy"` on images below the fold.
+- Minimize bundle size — split code aggressively.
+
+## Meta & SEO
+- Every page must have a unique `<title>` and `<meta name="description">`.
+- Use Open Graph and Twitter Card meta tags for social sharing.
+- Ensure canonical URLs are set correctly.
