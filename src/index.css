@@ -1,3 +1,101 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─── Design Tokens ─── */
+:root {
+  --color-surface: hsl(225, 25%, 6%);
+  --color-surface-50: hsl(225, 20%, 12%);
+  --color-surface-100: hsl(225, 20%, 16%);
+  --color-surface-200: hsl(225, 18%, 22%);
+  --color-accent: hsl(250, 90%, 65%);
+  --color-accent-light: hsl(250, 90%, 78%);
+  --color-cyan: hsl(185, 85%, 55%);
+  --color-magenta: hsl(320, 80%, 60%);
+  --color-gold: hsl(42, 90%, 60%);
+  --color-text: hsl(220, 20%, 92%);
+  --color-text-muted: hsl(220, 15%, 55%);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+/* ─── Base Reset ─── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-200);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+  }
+
+  /* Selection */
+  ::selection {
+    background: hsla(250, 90%, 65%, 0.3);
+    color: var(--color-text);
+  }
+}
+
+/* ─── Utility Classes ─── */
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--color-accent-light), var(--color-cyan), var(--color-magenta));
+  }
+
+  .glass {
+    background: hsla(225, 25%, 10%, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsla(225, 20%, 25%, 0.3);
+  }
+
+  .glass-subtle {
+    background: hsla(225, 25%, 10%, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid hsla(225, 20%, 25%, 0.15);
+  }
+
+  .glow-accent {
+    box-shadow:
+      0 0 20px hsla(250, 90%, 65%, 0.15),
+      0 0 60px hsla(250, 90%, 65%, 0.05);
+  }
+
+  .glow-cyan {
+    box-shadow:
+      0 0 20px hsla(185, 85%, 55%, 0.15),
+      0 0 60px hsla(185, 85%, 55%, 0.05);
+  }
+}

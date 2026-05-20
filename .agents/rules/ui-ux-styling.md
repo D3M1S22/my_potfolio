@@ -1,7 +1,7 @@
 ---
+trigger: always_on
 description: "UI/UX, styling, GSAP animations, ThreeJS 3D — applied when editing components or styles."
 globs: ["src/**/*.tsx", "src/**/*.css", "src/**/*.ts"]
-alwaysApply: false
 ---
 
 # UI/UX & Styling Excellence (Antigravity)

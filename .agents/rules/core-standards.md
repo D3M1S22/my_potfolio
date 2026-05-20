@@ -1,6 +1,6 @@
 ---
+trigger: always_on
 description: "Core project identity, tech stack, and non-negotiable coding standards for the portfolio project."
-alwaysApply: true
 ---
 
 # Portfolio — Core Standards (Antigravity)

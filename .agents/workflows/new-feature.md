@@ -1,3 +1,8 @@
+---
+description: "New feature workflow: plan -> build component -> add animation -> SEO check -> commit"
+alwaysApply: false
+---
+
 # Workflow: New Feature Development
 
 **Trigger:** User asks to build a new section, page, component, or visual element.

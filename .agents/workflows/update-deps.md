@@ -1,3 +1,8 @@
+---
+description: "Dependency update workflow: check outdated → update with bun → verify build → commit."
+alwaysApply: false
+---
+
 # Workflow: Update Dependencies
 
 **Trigger:** User asks to update, upgrade, or refresh packages.

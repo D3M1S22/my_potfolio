@@ -1,6 +1,6 @@
 ---
+trigger: always_on
 description: "GitHub workflow: Conventional Commits, commit prompting after milestones, sequential git commands."
-alwaysApply: false
 ---
 
 # GitHub Workflow (Antigravity)
