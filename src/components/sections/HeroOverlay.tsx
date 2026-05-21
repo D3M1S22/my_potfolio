@@ -49,10 +49,10 @@ export const HeroOverlay = () => {
         opacity: 0,
         y: -100,
         scrollTrigger: {
-          trigger: '#hero-spacer',
-          start: 'top top',
-          end: '25% top',
-          scrub: 1,
+          start: 0,
+          end: () => window.innerHeight * 0.8,
+          scrub: true,
+          invalidateOnRefresh: true,
         },
       });
     }, containerRef);

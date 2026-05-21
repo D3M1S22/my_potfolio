@@ -67,7 +67,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
 
     const targetY = isMobile
       ? height * 0.22
-      : (index % 2 === 0 ? height * 0.05 : -height * 0.05);
+      : 0;
 
     const targetZ = isMobile ? 0.8 : 1.5;
 
@@ -145,124 +145,72 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         invalidateOnRefresh: true,
       },
     })
+      .to(mesh.rotation, {
+        x: () => Math.random() * Math.PI * 4,
+        y: () => Math.random() * Math.PI * 4,
+        z: () => Math.random() * Math.PI * 4,
+        ease: 'none',
+        duration: 1,
+      }, 0)
       .to(mesh.position, {
         x: () => offscreenRef.current.x,
         y: () => offscreenRef.current.y,
         z: () => offscreenRef.current.z,
-        ease: 'power3.inOut',
+        ease: 'none',
         duration: 1,
-        onStart:           () => setIsAssembled(false),
-        onReverseComplete: () => setIsAssembled(true),
       }, 0)
-      .to(mat, { opacity: 0, ease: 'power2.in', duration: 1 }, 0.2);
+      .to(mat, { opacity: 0, ease: 'none', duration: 1 }, 0.2);
 
     // ── Phase 2 — ENTER (Sweeping Curved Pathway from Middle-Outside) ────────
     const getEnterStartX = () => isMobileRef.current ? 0 : (directionRef.current === 'left' ? widthRef.current * 0.8 : -widthRef.current * 0.8);
     const getEnterStartY = () => isMobileRef.current ? heightRef.current * 0.8 : 0;
     const enterStartZ = -6.0;
 
-    const enterTimeline = gsap.timeline({
+    const mainTl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionEl,
-        start: 'top 85%', // Start entering slightly later
-        end:   'top 35%', // Finish entering before section is fully centered
+        start: 'top 85%',
+        end: 'bottom 5%',
         scrub: 1.5,
         invalidateOnRefresh: true,
       },
     });
 
-    enterTimeline
-      .to(mat, { opacity: 1, ease: 'power2.out', duration: 0.4 }, 0)
-      // Animate X rapidly at first (power2.out)
+    mainTl
+      // ── Phase 2: Enter (Duration: 28) ──
+      .fromTo(mat, { opacity: 0 }, { opacity: 1, ease: 'power2.out', duration: 10, immediateRender: false }, 0)
       .fromTo(
         mesh.position,
         { x: getEnterStartX, y: getEnterStartY, z: enterStartZ },
-        {
-          x: () => targetRef.current.x,
-          ease: 'power2.out',
-          duration: 1,
-          immediateRender: false, // Prevents collapsing to 0,0,0 on page load
-          // Removed isAssembled toggles from here to prevent scroll-back glitch
-        },
-        0,
+        { x: () => targetRef.current.x, ease: 'power2.out', duration: 28, immediateRender: false },
+        0
       )
-      // Animate Y and Z smoothly (power1.inOut) to form a gorgeous curve
-      .to(
-        mesh.position,
-        {
-          y: () => targetRef.current.y,
-          z: () => targetRef.current.z,
-          ease: 'power1.inOut',
-          duration: 1,
-        },
-        0,
-      )
+      .to(mesh.position, { y: () => targetRef.current.y, z: () => targetRef.current.z, ease: 'power1.inOut', duration: 28 }, 0)
       .fromTo(
         mesh.rotation,
         { x: 0, y: 0, z: 0 },
-        {
-          x: enterRotX,
-          y: enterRotY,
-          z: enterRotZ,
-          ease: 'sine.inOut',
-          duration: 1,
-          immediateRender: false,
-        },
-        0,
+        { x: enterRotX, y: enterRotY, z: enterRotZ, ease: 'sine.inOut', duration: 28, immediateRender: false },
+        0
       )
       .fromTo(
         mesh.scale,
         { x: 1, y: 1, z: 1 },
-        {
-          x: 1.15, y: 0.85, z: 1.15,
-          ease: 'sine.inOut',
-          duration: 0.5,
-          immediateRender: false,
-        },
-        0,
+        { x: 1.15, y: 0.85, z: 1.15, ease: 'sine.inOut', duration: 14, immediateRender: false },
+        0
       )
+      .to(mesh.scale, { x: 1.0, y: 1.0, z: 1.0, ease: 'back.out(1.5)', duration: 14 }, 14)
+      
+      // ── Hold (Duration: 36) implicitly defined by delay before Phase 3 ──
+      
+      // ── Phase 3: Exit (Starts at 64, Duration: 36) ──
+      .to(mesh.position, { z: 3.5, ease: 'power1.inOut', duration: 18 }, 64)
       .to(
-        mesh.scale,
-        {
-          x: 1.0, y: 1.0, z: 1.0,
-          ease: 'back.out(1.5)',
-          duration: 0.5,
-        },
-        0.5,
-      );
-
-    // ── Phase 3 — EXIT (Cinematic Zoom past Camera & Sideways Exit) ──────────
-    gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionEl,
-        start: 'bottom 70%',
-        end:   'bottom 5%',
-        scrub: 1.5,
-        invalidateOnRefresh: true,
-      },
-    })
-      // Step 1: Zoom in towards the user
-      .to(mesh.position, {
-        z: 3.5,
-        ease: 'power1.inOut',
-        duration: 0.5,
-      }, 0)
-      // Step 2: Exit past the camera and sideways off-screen
-      .to(mesh.position, {
-        x: () => directionRef.current === 'left' ? widthRef.current * 1.2 : -widthRef.current * 1.2,
-        y: () => -heightRef.current * 0.2,
-        z: 5.0,
-        ease: 'power2.in',
-        duration: 0.5,
-      }, 0.5)
-      .to(mesh.rotation, {
-        x: exitRotX,
-        y: enterRotY * 1.5,
-        z: enterRotZ * 1.5,
-        ease: 'power2.in',
-        duration: 1,
-      }, 0)
-      .to(mat, { opacity: 0, ease: 'power1.in', duration: 0.6 }, 0.4);
+        mesh.position,
+        { x: () => directionRef.current === 'left' ? widthRef.current * 1.2 : -widthRef.current * 1.2, y: () => -heightRef.current * 0.2, z: 5.0, ease: 'power2.in', duration: 18 },
+        82
+      )
+      .to(mesh.rotation, { x: exitRotX, y: enterRotY * 1.5, z: enterRotZ * 1.5, ease: 'power2.in', duration: 36 }, 64)
+      .to(mat, { opacity: 0, ease: 'power1.in', duration: 15 }, 85);
 
   }, [index, homePosition]); // Decoupled from viewport variables!
 
@@ -278,6 +226,13 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
 
     const t = performance.now() * 0.001;
 
+    // Force assembly near top of page to prevent GSAP backwards-scroll race conditions
+    const scrollY = window.scrollY || 0;
+    const isAtTop = scrollY < window.innerHeight * 0.2;
+    if (isAtTop !== isAssembled) {
+      setIsAssembled(isAtTop);
+    }
+
     // Hover scale — lerp toward target
     const hoverScaleTarget = hovered && isAssembled ? 1.25 : 1.0;
 
@@ -290,6 +245,14 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     );
 
     if (isAssembled) {
+      // Instant snap recovery if teleported away by GSAP race conditions during extreme scrolling
+      const basePos = new THREE.Vector3(homePosition[0], homePosition[1], homePosition[2]);
+      if (mesh.position.distanceTo(basePos) > 2.0) {
+        mesh.position.copy(basePos);
+        breathOffset.current = { x: 0, y: 0, z: 0 };
+        floatOffset.current = { y: 0, ry: 0 };
+      }
+
       // Gentle breathing pulse inside the assembled cluster
       const breathTime = performance.now() * 0.0015;
       const breath = Math.sin(breathTime * 2.0 + index * 0.8) * 0.025;

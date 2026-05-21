@@ -33,39 +33,23 @@ export const SectionPanel = ({
       // Slide the content panel in from the opposite direction of the cube
       const xFrom = direction === 'left' ? 120 : -120;
 
-      gsap.fromTo(
-        contentRef.current,
-        {
-          opacity: 0,
-          x: xFrom,
-          scale: 0.9,
-        },
-        {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          duration: 1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: panelRef.current,
-            start: 'top 60%',
-            end: 'top 20%',
-            scrub: 1,
-          },
-        },
-      );
-
-      // Fade out as user scrolls past
-      gsap.to(contentRef.current, {
-        opacity: 0,
-        y: -40,
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: panelRef.current,
-          start: 'bottom 60%',
+          start: 'top 85%',
           end: 'bottom 20%',
-          scrub: 1,
+          scrub: true,
+          invalidateOnRefresh: true,
         },
       });
+
+      tl.fromTo(
+        contentRef.current,
+        { opacity: 0, x: xFrom, scale: 0.9 },
+        { opacity: 1, x: 0, scale: 1, duration: 30, ease: 'power3.out' }
+      )
+        .to({}, { duration: 45 }) // Hold text steady
+        .to(contentRef.current, { opacity: 0, y: -40, duration: 25, ease: 'power2.in' });
     }, panelRef);
 
     return () => ctx.revert();
