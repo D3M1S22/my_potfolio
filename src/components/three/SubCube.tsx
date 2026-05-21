@@ -141,7 +141,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         trigger: heroEl,
         start: '30% top', // Start after name has disappeared
         end:   '70% top', // Finish well before Phase 2 begins
-        scrub: 1.2,
+        scrub: true,
         invalidateOnRefresh: true,
       },
     })
@@ -171,7 +171,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         trigger: sectionEl,
         start: 'top 85%',
         end: 'bottom 5%',
-        scrub: 1.5,
+        scrub: true,
         invalidateOnRefresh: true,
       },
     });
