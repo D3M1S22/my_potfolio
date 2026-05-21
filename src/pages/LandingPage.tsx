@@ -1,4 +1,3 @@
-import { useScrollProgress } from '@/hooks/useScrollProgress';
 import { ExplodingCube } from '@/components/three/ExplodingCube';
 import { HeroOverlay } from '@/components/sections/HeroOverlay';
 import { SectionPanel } from '@/components/sections/SectionPanel';
@@ -7,26 +6,35 @@ import { ScrollProgress } from '@/components/ui/ScrollProgress';
 import { Navbar } from '@/components/ui/Navbar';
 
 export const LandingPage = () => {
-  const progressRef = useScrollProgress(9);
-
   return (
     <main>
-      {/* Fixed UI elements */}
+      {/* Fixed UI chrome */}
       <ScrollProgress />
       <Navbar />
 
-      {/* 3D scene — fixed behind content */}
-      <ExplodingCube progressRef={progressRef} />
+      {/* 3D scene — fixed, transparent canvas behind all content */}
+      <ExplodingCube />
 
-      {/* Hero overlay — fixed, fades on scroll */}
+      {/* Hero text overlay — fixed, fades on scroll */}
       <HeroOverlay />
 
-      {/* Scroll container — drives the scroll progress */}
+      {/* Scrollable content — drives the page height */}
       <div id="top" className="relative z-[1]">
-        {/* Hero spacer (first 100vh is the hero) — pointer-events-none so 3D cube is interactive */}
-        <div className="h-screen pointer-events-none" aria-hidden="true" />
 
-        {/* 8 section panels */}
+        {/*
+          Hero spacer — gives the assembled cube time to be seen.
+          id="hero-spacer" is the GSAP ScrollTrigger anchor for the
+          global rotation fade-out in CubeGroup.
+          pointer-events-none so the 3D event overlay can receive
+          hover / click during the hero.
+        */}
+        <div
+          id="hero-spacer"
+          className="h-screen pointer-events-none"
+          aria-hidden="true"
+        />
+
+        {/* 8 section panels — each has id="section-N" for GSAP anchors */}
         {SECTIONS_DATA.map((section, index) => (
           <SectionPanel
             key={section.id}
@@ -40,8 +48,8 @@ export const LandingPage = () => {
           />
         ))}
 
-        {/* Footer spacer */}
-        <footer className="h-screen flex items-center justify-center relative">
+        {/* Footer */}
+        <footer className="h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-white/30 font-mono text-sm uppercase tracking-widest mb-4">
               Thanks for scrolling
