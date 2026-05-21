@@ -47,11 +47,11 @@ export const HeroOverlay = () => {
       // Fade hero out on scroll
       gsap.to(containerRef.current, {
         opacity: 0,
-        y: -60,
+        y: -100,
         scrollTrigger: {
-          trigger: containerRef.current,
+          trigger: '#hero-spacer',
           start: 'top top',
-          end: '+=50%',
+          end: '25% top',
           scrub: 1,
         },
       });

@@ -30,6 +30,26 @@ const CUBE_COLORS = [
 // speed to zero as the hero leaves, so the cluster cleanly stops spinning
 // before the first cube explodes. useFrame reads a simple speed ref — no
 // progressRef maths needed.
+const CoreLight = () => {
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  useFrame(() => {
+    if (!lightRef.current) return;
+    const t = performance.now() * 0.0015;
+    // Bioluminescent pulsing intensity between 0.8 and 2.2
+    lightRef.current.intensity = 1.5 + Math.sin(t * 2.5) * 0.7;
+  });
+
+  return (
+    <pointLight
+      ref={lightRef}
+      position={[0, 0, 0]}
+      distance={3}
+      decay={2}
+      color="#7c5cf7"
+    />
+  );
+};
 
 const CubeGroup = () => {
   const groupRef    = useRef<THREE.Group>(null);
@@ -83,6 +103,7 @@ const CubeGroup = () => {
 
   return (
     <group ref={groupRef}>
+      <CoreLight />
       {CUBE_COLORS.map((color, i) => (
         <SubCube
           key={i}

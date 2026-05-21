@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState, useCallback } from 'react';
-import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { useFrame, ThreeEvent, useThree } from '@react-three/fiber';
+import { Html, RoundedBox } from '@react-three/drei';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -37,26 +37,6 @@ const GRID_OFFSETS: [number, number, number][] = [
   [ 1, -1, -1],  // 7 bottom-right-back
 ];
 
-/**
- * Active (exploded) positions — opposite side of their content panel.
- * Even index = content is on LEFT  → cube lands on RIGHT (+x).
- * Odd  index = content is on RIGHT → cube lands on LEFT  (−x).
- * High z (2–3) puts them prominently in front of the scene.
- */
-const EXPLODE_TARGETS: { x: number; y: number; z: number }[] = [
-  {  x:  2.2,  y:  0.2, z: 1.5 }, // 0 About       left-panel  → cube right
-  {  x: -2.2,  y:  0.1, z: 1.2 }, // 1 Skills      right-panel → cube left
-  {  x:  2.0,  y: -0.1, z: 1.8 }, // 2 Projects    left-panel  → cube right
-  {  x: -2.0,  y:  0.3, z: 1.4 }, // 3 Experience  right-panel → cube left
-  {  x:  2.3,  y:  0.0, z: 1.3 }, // 4 Education   left-panel  → cube right
-  {  x: -2.3,  y: -0.2, z: 1.5 }, // 5 Contact     right-panel → cube left
-  {  x:  2.1,  y:  0.2, z: 2.0 }, // 6 Testimonials left-panel → cube right
-  {  x: -2.1,  y: -0.1, z: 1.7 }, // 7 Social      right-panel → cube left
-];
-
-/** Exit destination — cubes dismiss to here when their section scrolls out */
-const EXIT_OFFSET = { y: 6, z: -5, opacity: 0 } as const;
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCubeProps) => {
@@ -66,7 +46,11 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
   const [hovered,    setHovered]    = useState(false);
   const [isAssembled, setIsAssembled] = useState(true);
 
-  // ── Derived geometry values ─────────────────────────────────────────────────
+  // ── Derived geometry and responsiveness ─────────────────────────────────────
+
+  const { width, height } = useThree((state) => state.viewport);
+  const isMobile = width < 5.0 || (width / height) < 1.0;
+  const direction = index % 2 === 0 ? 'left' : 'right';
 
   /** World-space position inside the assembled 2×2×2 block */
   const homePosition = useMemo<[number, number, number]>(() => {
@@ -75,17 +59,62 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     return [offset[0] * halfStep, offset[1] * halfStep, offset[2] * halfStep];
   }, [index, size, gap]);
 
-  const explodeTarget = EXPLODE_TARGETS[index];
+  /** Responsive dynamic target coordinates */
+  const explodeTarget = useMemo(() => {
+    const targetX = isMobile
+      ? 0
+      : (direction === 'left' ? width * 0.22 : -width * 0.22);
+
+    const targetY = isMobile
+      ? height * 0.22
+      : (index % 2 === 0 ? height * 0.05 : -height * 0.05);
+
+    const targetZ = isMobile ? 0.8 : 1.5;
+
+    return { x: targetX, y: targetY, z: targetZ };
+  }, [width, height, isMobile, direction, index]);
+
+  /** Explode outward off-screen target coordinates for Phase 1 (Standby) */
+  const offscreenTarget = useMemo(() => {
+    const vector = GRID_OFFSETS[index];
+    const factorX = width * 1.5;
+    const factorY = height * 1.5;
+    const factorZ = 4.0;
+    return {
+      x: vector[0] * factorX,
+      y: vector[1] * factorY,
+      z: vector[2] * factorZ
+    };
+  }, [index, width, height]);
+
+  /** Radiating blueprint tooltip positions around the assembled 2x2x2 cluster */
+  const tooltipPosition = useMemo<[number, number, number]>(() => {
+    const offset = GRID_OFFSETS[index];
+    const factorX = size * 1.8;
+    const factorY = size * 1.8;
+    const factorZ = size * 1.2;
+    return [offset[0] * factorX, offset[1] * factorY, offset[2] * factorZ];
+  }, [index, size]);
+
+  // ── Reference Tracking for GSAP ─────────────────────────────────────────────
+  // We decouple GSAP's timeline from React's render cycle so that resizing the 
+  // window doesn't destroy the timeline and force the cubes back to (0,0,0).
+  const widthRef = useRef(width);
+  const heightRef = useRef(height);
+  const isMobileRef = useRef(isMobile);
+  const directionRef = useRef(direction);
+  const targetRef = useRef(explodeTarget);
+  const offscreenRef = useRef(offscreenTarget);
+
+  widthRef.current = width;
+  heightRef.current = height;
+  isMobileRef.current = isMobile;
+  directionRef.current = direction;
+  targetRef.current = explodeTarget;
+  offscreenRef.current = offscreenTarget;
 
   // ── GSAP 3-phase scroll animation ──────────────────────────────────────────
-  //
-  //  Three ScrollTriggers per cube:
-  //   Phase 1 STANDBY  — hero exits   → opacity fades to 0
-  //   Phase 2 ENTER    — section top  → cube flies to explode target, fades in
-  //   Phase 3 EXIT     — section bot  → cube dismisses up/back, fades out
-  //
-  //  invalidateOnRefresh: true on every ST ensures positions recalculate
-  //  correctly if the browser restores scroll position after a hard-refresh.
+
   useGSAP(() => {
     const mesh = meshRef.current;
     const mat  = matRef.current;
@@ -95,92 +124,152 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     const sectionEl = document.getElementById(`section-${index}`);
     if (!heroEl || !sectionEl) return;
 
-    // Guarantee correct initial state regardless of scroll position on mount.
-    // Without these, a hard-refresh mid-page leaves cubes invisible or misplaced.
+    // Reset initial states before timeline starts.
     gsap.set(mat,          { opacity: 1 });
     gsap.set(mesh.position, { x: homePosition[0], y: homePosition[1], z: homePosition[2] });
-    gsap.set(mesh.rotation, { x: 0, z: 0 });
+    gsap.set(mesh.rotation, { x: 0, y: 0, z: 0 });
+    gsap.set(mesh.scale,    { x: 1, y: 1, z: 1 });
 
-    // Shared rotation values so enter and exit always agree
     const enterRotX = Math.PI * 0.25 * (index % 2 === 0 ?  1 : -1);
+    const enterRotY = Math.PI * 0.3 * (index % 2 === 0 ? -1 :  1);
     const enterRotZ = Math.PI * 0.15 * (index % 2 === 0 ? -1 :  1);
     const exitRotX  = enterRotX + Math.PI * 0.5;
 
-    // ── Phase 1 — STANDBY ───────────────────────────────────────────────────
+    // ── Phase 1 — STANDBY (Supernova Explode Outwards Off-screen) ────────────
     gsap.timeline({
       scrollTrigger: {
         trigger: heroEl,
-        start: 'bottom 80%',
-        end:   'bottom top',
-        scrub: 1,
-        invalidateOnRefresh: true,
-      },
-    }).to(mat, { opacity: 0, ease: 'power1.in', duration: 1 });
-
-    // ── Phase 2 — ENTER ─────────────────────────────────────────────────────
-    // Use .to() for opacity (not fromTo) so it doesn't conflict with standby.
-    // Use fromTo on position/rotation so GSAP always starts from home.
-    gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionEl,
-        start: 'top 70%',
-        end:   'top 15%',
-        scrub: 1.2,
-        invalidateOnRefresh: true,
-        // markers: true,
-      },
-    })
-      .to(mat, { opacity: 1, ease: 'power2.out', duration: 0.4 }, 0)
-      .fromTo(
-        mesh.position,
-        { x: homePosition[0], y: homePosition[1], z: homePosition[2] },
-        {
-          x: explodeTarget.x, y: explodeTarget.y, z: explodeTarget.z,
-          ease: 'power3.inOut', duration: 1,
-          onStart:           () => setIsAssembled(false),
-          onReverseComplete: () => setIsAssembled(true),
-        },
-        0,
-      )
-      .fromTo(
-        mesh.rotation,
-        { x: 0, z: 0 },
-        { x: enterRotX, z: enterRotZ, ease: 'power2.inOut', duration: 1 },
-        0,
-      );
-
-    // ── Phase 3 — EXIT ──────────────────────────────────────────────────────
-    gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionEl,
-        start: 'bottom 70%',
-        end:   'bottom 5%',
+        start: '30% top', // Start after name has disappeared
+        end:   '70% top', // Finish well before Phase 2 begins
         scrub: 1.2,
         invalidateOnRefresh: true,
       },
     })
       .to(mesh.position, {
-        y: explodeTarget.y + EXIT_OFFSET.y, z: EXIT_OFFSET.z,
-        ease: 'power2.in', duration: 1,
+        x: () => offscreenRef.current.x,
+        y: () => offscreenRef.current.y,
+        z: () => offscreenRef.current.z,
+        ease: 'power3.inOut',
+        duration: 1,
+        onStart:           () => setIsAssembled(false),
+        onReverseComplete: () => setIsAssembled(true),
       }, 0)
-      .to(mesh.rotation, { x: exitRotX, ease: 'power2.in', duration: 1 }, 0)
+      .to(mat, { opacity: 0, ease: 'power2.in', duration: 1 }, 0.2);
+
+    // ── Phase 2 — ENTER (Sweeping Curved Pathway from Middle-Outside) ────────
+    const getEnterStartX = () => isMobileRef.current ? 0 : (directionRef.current === 'left' ? widthRef.current * 0.8 : -widthRef.current * 0.8);
+    const getEnterStartY = () => isMobileRef.current ? heightRef.current * 0.8 : 0;
+    const enterStartZ = -6.0;
+
+    const enterTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionEl,
+        start: 'top 85%', // Start entering slightly later
+        end:   'top 35%', // Finish entering before section is fully centered
+        scrub: 1.5,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    enterTimeline
+      .to(mat, { opacity: 1, ease: 'power2.out', duration: 0.4 }, 0)
+      // Animate X rapidly at first (power2.out)
+      .fromTo(
+        mesh.position,
+        { x: getEnterStartX, y: getEnterStartY, z: enterStartZ },
+        {
+          x: () => targetRef.current.x,
+          ease: 'power2.out',
+          duration: 1,
+          immediateRender: false, // Prevents collapsing to 0,0,0 on page load
+          // Removed isAssembled toggles from here to prevent scroll-back glitch
+        },
+        0,
+      )
+      // Animate Y and Z smoothly (power1.inOut) to form a gorgeous curve
+      .to(
+        mesh.position,
+        {
+          y: () => targetRef.current.y,
+          z: () => targetRef.current.z,
+          ease: 'power1.inOut',
+          duration: 1,
+        },
+        0,
+      )
+      .fromTo(
+        mesh.rotation,
+        { x: 0, y: 0, z: 0 },
+        {
+          x: enterRotX,
+          y: enterRotY,
+          z: enterRotZ,
+          ease: 'sine.inOut',
+          duration: 1,
+          immediateRender: false,
+        },
+        0,
+      )
+      .fromTo(
+        mesh.scale,
+        { x: 1, y: 1, z: 1 },
+        {
+          x: 1.15, y: 0.85, z: 1.15,
+          ease: 'sine.inOut',
+          duration: 0.5,
+          immediateRender: false,
+        },
+        0,
+      )
+      .to(
+        mesh.scale,
+        {
+          x: 1.0, y: 1.0, z: 1.0,
+          ease: 'back.out(1.5)',
+          duration: 0.5,
+        },
+        0.5,
+      );
+
+    // ── Phase 3 — EXIT (Cinematic Zoom past Camera & Sideways Exit) ──────────
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionEl,
+        start: 'bottom 70%',
+        end:   'bottom 5%',
+        scrub: 1.5,
+        invalidateOnRefresh: true,
+      },
+    })
+      // Step 1: Zoom in towards the user
+      .to(mesh.position, {
+        z: 3.5,
+        ease: 'power1.inOut',
+        duration: 0.5,
+      }, 0)
+      // Step 2: Exit past the camera and sideways off-screen
+      .to(mesh.position, {
+        x: () => directionRef.current === 'left' ? widthRef.current * 1.2 : -widthRef.current * 1.2,
+        y: () => -heightRef.current * 0.2,
+        z: 5.0,
+        ease: 'power2.in',
+        duration: 0.5,
+      }, 0.5)
+      .to(mesh.rotation, {
+        x: exitRotX,
+        y: enterRotY * 1.5,
+        z: enterRotZ * 1.5,
+        ease: 'power2.in',
+        duration: 1,
+      }, 0)
       .to(mat, { opacity: 0, ease: 'power1.in', duration: 0.6 }, 0.4);
 
-  }, [index, explodeTarget, homePosition]);
+  }, [index, homePosition]); // Decoupled from viewport variables!
 
+  // ── useFrame — dynamic organic states ───────────────────────────────────────
 
-  // ── useFrame — micro-interactions only (no base-position writes) ───────────
-  //
-  //  GSAP owns mesh.position and mesh.rotation.x / .z.
-  //  useFrame only touches:
-  //    • scale   — hover swell
-  //    • emissiveIntensity — hover glow
-  //    • rotation.y + position.y float — only when cube is dismissed/active,
-  //      using an ADDITIVE offset on top of GSAP's absolute value.
-  //
-  //  We store the float offset in a ref so it doesn't fight GSAP.
-
-  const floatOffset = useRef({ y: 0, ry: 0 });
+  const floatOffset  = useRef({ y: 0, ry: 0 });
+  const breathOffset = useRef({ x: 0, y: 0, z: 0 });
 
   useFrame((_, delta) => {
     const mesh = meshRef.current;
@@ -190,36 +279,46 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     const t = performance.now() * 0.001;
 
     // Hover scale — lerp toward target
-    const scaleTarget = hovered && isAssembled ? 1.2 : 1.0;
-    mesh.scale.setScalar(
-      THREE.MathUtils.lerp(mesh.scale.x, scaleTarget, 1 - Math.pow(0.05, delta * 60)),
-    );
+    const hoverScaleTarget = hovered && isAssembled ? 1.25 : 1.0;
 
     // Emissive glow — lerp toward target
-    const glowTarget = hovered && isAssembled ? 0.4 : 0.0;
+    const glowTarget = hovered && isAssembled ? 0.5 : 0.0;
     mat.emissiveIntensity = THREE.MathUtils.lerp(
       mat.emissiveIntensity,
       glowTarget,
       1 - Math.pow(0.05, delta * 60),
     );
 
-    // Gentle float when active (not assembled, not being exited by GSAP)
-    // We add a tiny sinusoidal delta each frame and track it in floatOffset.
-    // On the next frame GSAP doesn't override per-frame deltas because scrub
-    // only fires on scroll events; between scrolls we freely float.
-    if (!isAssembled) {
-      const prevRy = floatOffset.current.ry;
-      const newRy  = Math.sin(t * 0.8 + index * 1.1) * 0.12;
-      mesh.rotation.y += newRy - prevRy;
-      floatOffset.current.ry = newRy;
+    if (isAssembled) {
+      // Gentle breathing pulse inside the assembled cluster
+      const breathTime = performance.now() * 0.0015;
+      const breath = Math.sin(breathTime * 2.0 + index * 0.8) * 0.025;
+      
+      const targetBreathX = homePosition[0] * breath;
+      const targetBreathY = homePosition[1] * breath;
+      const targetBreathZ = homePosition[2] * breath;
 
-      const prevY  = floatOffset.current.y;
-      const newY   = Math.sin(t * 0.6 + index * 0.7) * 0.04;
-      mesh.position.y += newY - prevY;
-      floatOffset.current.y = newY;
-    } else {
-      // Snap float offset back to zero when re-assembled so GSAP's reverse
-      // isn't fighting a stale offset
+      // Apply additive breathing offset
+      const prevBX = breathOffset.current.x;
+      const prevBY = breathOffset.current.y;
+      const prevBZ = breathOffset.current.z;
+
+      mesh.position.x += targetBreathX - prevBX;
+      mesh.position.y += targetBreathY - prevBY;
+      mesh.position.z += targetBreathZ - prevBZ;
+
+      breathOffset.current.x = targetBreathX;
+      breathOffset.current.y = targetBreathY;
+      breathOffset.current.z = targetBreathZ;
+
+      // Breathing scale combined with hover scaling
+      const breathScale = 1.0 + Math.sin(breathTime * 3.0 + index * 0.5) * 0.04;
+      const finalScaleTarget = hovered ? 1.25 : breathScale;
+      mesh.scale.setScalar(
+        THREE.MathUtils.lerp(mesh.scale.x, finalScaleTarget, 1 - Math.pow(0.05, delta * 60))
+      );
+
+      // Reset float offsets
       const prevRy = floatOffset.current.ry;
       mesh.rotation.y -= prevRy;
       floatOffset.current.ry = 0;
@@ -227,6 +326,36 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
       const prevY = floatOffset.current.y;
       mesh.position.y -= prevY;
       floatOffset.current.y = 0;
+    } else {
+      // Reset breathing offset when not assembled
+      const prevBX = breathOffset.current.x;
+      const prevBY = breathOffset.current.y;
+      const prevBZ = breathOffset.current.z;
+
+      mesh.position.x -= prevBX;
+      mesh.position.y -= prevBY;
+      mesh.position.z -= prevBZ;
+
+      breathOffset.current.x = 0;
+      breathOffset.current.y = 0;
+      breathOffset.current.z = 0;
+
+      // Apply multi-frequency floating offsets (active state)
+      const prevRy = floatOffset.current.ry;
+      const newRy  = Math.sin(t * 0.8 + index * 1.1) * 0.15;
+      mesh.rotation.y += newRy - prevRy;
+      floatOffset.current.ry = newRy;
+
+      // Organic fluid float
+      const prevY  = floatOffset.current.y;
+      const newY   = Math.sin(t * 0.6 + index * 0.7) * 0.05 + Math.cos(t * 1.2 + index * 1.3) * 0.02;
+      mesh.position.y += newY - prevY;
+      floatOffset.current.y = newY;
+
+      // Settle scale smoothly back to hover target
+      mesh.scale.setScalar(
+        THREE.MathUtils.lerp(mesh.scale.x, hoverScaleTarget, 1 - Math.pow(0.05, delta * 60))
+      );
     }
   });
 
@@ -250,14 +379,16 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <mesh
-      ref={meshRef}
+    <RoundedBox
+      ref={meshRef as any}
+      args={[size, size, size]}
+      radius={0.08}
+      smoothness={4}
       position={homePosition}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <boxGeometry args={[size, size, size]} />
       <meshStandardMaterial
         ref={matRef}
         color={color}
@@ -270,45 +401,38 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         opacity={1}
       />
 
-      {/* Tooltip — only while assembled and hovered */}
-      {hovered && isAssembled && (
+      {/* Blueprint Diagram Tooltips — always visible in assembled state with dynamic hover active styling */}
+      {isAssembled && (
         <Html
           center
-          distanceFactor={5}
-          position={[0, size * 1.4, 0]}
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          distanceFactor={4.5}
+          position={tooltipPosition}
+          occlude
+          style={{
+            pointerEvents: 'none',
+            userSelect: 'none',
+            transition: 'opacity 0.3s ease-in-out'
+          }}
         >
           <div
-            className="whitespace-nowrap px-4 py-2 rounded-xl text-xs font-mono font-semibold
-                        tracking-wider uppercase"
+            className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
+                        tracking-wider uppercase transition-all duration-300 relative"
             style={{
-              background:    'hsla(225, 25%, 8%, 0.92)',
-              backdropFilter:'blur(16px)',
-              border:        `1px solid ${color}55`,
-              color,
-              boxShadow:     `0 0 24px ${color}35, 0 8px 24px rgba(0,0,0,0.6)`,
-              transform:     'translateY(-12px)',
+              background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
+              backdropFilter:hovered ? 'blur(12px)' : 'none',
+              border:        `1px solid ${hovered ? color : 'transparent'}`,
+              color:         hovered ? '#ffffff' : color,
+              boxShadow:     hovered 
+                ? `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.5)`
+                : 'none',
+              transform:     hovered ? 'scale(1.1)' : 'scale(1)',
+              opacity:       0.9,
             }}
           >
             {label}
-            {/* Arrow */}
-            <span
-              aria-hidden="true"
-              style={{
-                position:    'absolute',
-                bottom:      '-5px',
-                left:        '50%',
-                transform:   'translateX(-50%) rotate(45deg)',
-                width:       '8px',
-                height:      '8px',
-                background:  'hsla(225, 25%, 8%, 0.92)',
-                borderRight: `1px solid ${color}55`,
-                borderBottom:`1px solid ${color}55`,
-              }}
-            />
           </div>
         </Html>
       )}
-    </mesh>
+    </RoundedBox>
   );
 };

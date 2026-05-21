@@ -4,13 +4,15 @@ import { SectionPanel } from '@/components/sections/SectionPanel';
 import { SECTIONS_DATA } from '@/components/sections/sections-data';
 import { ScrollProgress } from '@/components/ui/ScrollProgress';
 import { Navbar } from '@/components/ui/Navbar';
+import { SmoothScroll } from '@/components/ui/SmoothScroll';
 
 export const LandingPage = () => {
   return (
-    <main>
-      {/* Fixed UI chrome */}
-      <ScrollProgress />
-      <Navbar />
+    <SmoothScroll>
+      <main>
+        {/* Fixed UI chrome */}
+        <ScrollProgress />
+        <Navbar />
 
       {/* 3D scene — fixed, transparent canvas behind all content */}
       <ExplodingCube />
@@ -30,7 +32,7 @@ export const LandingPage = () => {
         */}
         <div
           id="hero-spacer"
-          className="h-screen pointer-events-none"
+          className="h-[300vh] pointer-events-none"
           aria-hidden="true"
         />
 
@@ -91,5 +93,6 @@ export const LandingPage = () => {
         </footer>
       </div>
     </main>
+    </SmoothScroll>
   );
 };
