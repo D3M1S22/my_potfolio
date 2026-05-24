@@ -10,10 +10,10 @@ export default {
       },
       colors: {
         surface: {
-          DEFAULT: 'hsl(225, 25%, 6%)',
-          50: 'hsl(225, 20%, 12%)',
-          100: 'hsl(225, 20%, 16%)',
-          200: 'hsl(225, 18%, 22%)',
+          DEFAULT: 'var(--color-surface)',
+          50: 'var(--color-surface-50)',
+          100: 'var(--color-surface-100)',
+          200: 'var(--color-surface-200)',
         },
         accent: {
           DEFAULT: 'hsl(250, 90%, 65%)',
@@ -31,6 +31,11 @@ export default {
         gold: {
           DEFAULT: 'hsl(42, 90%, 60%)',
           light: 'hsl(42, 90%, 75%)',
+        },
+        text: {
+          DEFAULT: 'var(--color-text)',
+          muted: 'var(--color-text-muted)',
+          faint: 'var(--color-text-faint)',
         },
       },
       animation: {

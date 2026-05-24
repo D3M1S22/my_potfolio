@@ -24,18 +24,21 @@ export const ScrollProgress = () => {
   }, []);
 
   return (
-    <div
-      className="fixed top-0 left-0 z-50 h-[3px] transition-none"
-      style={{
-        width: `${progress * 100}%`,
-        background:
-          'linear-gradient(90deg, #7c5cf7, #38bdf8, #f472b6, #fbbf24)',
-      }}
-      role="progressbar"
-      aria-valuenow={Math.round(progress * 100)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label="Scroll progress"
-    />
+    <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-[4px] h-[40vh] bg-[var(--color-glass-border)] rounded-full overflow-hidden">
+      {/* Scrollbar Thumb */}
+      <div
+        className="w-full transition-none rounded-full shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+        style={{
+          height: `${progress * 100}%`,
+          background:
+            'linear-gradient(180deg, var(--color-accent-light), var(--color-cyan), var(--color-magenta))',
+        }}
+        role="progressbar"
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Scroll progress"
+      />
+    </div>
   );
 };

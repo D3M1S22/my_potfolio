@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const NAV_ITEMS = [
   { label: 'Home', href: '#top' },
@@ -64,7 +65,7 @@ export const Navbar = () => {
                   e.preventDefault();
                   handleNavClick(item.href);
                 }}
-                className="text-sm text-white/50 hover:text-white transition-colors duration-200
+                className="text-sm text-text-faint hover:text-text transition-colors duration-200
                            uppercase tracking-wider font-mono"
               >
                 {item.label}
@@ -73,29 +74,34 @@ export const Navbar = () => {
           ))}
         </ul>
 
-        {/* Mobile Menu Toggle */}
-        <button
+        {/* Theme Toggle & Mobile Menu */}
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+
+          {/* Mobile Menu Toggle */}
+          <button
           className="md:hidden flex flex-col gap-1.5 p-2"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
         >
           <span
-            className={`w-6 h-0.5 bg-white transition-all duration-300 ${
+            className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? 'rotate-45 translate-y-2' : ''
             }`}
           />
           <span
-            className={`w-6 h-0.5 bg-white transition-all duration-300 ${
+            className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? 'opacity-0' : ''
             }`}
           />
           <span
-            className={`w-6 h-0.5 bg-white transition-all duration-300 ${
+            className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? '-rotate-45 -translate-y-2' : ''
             }`}
           />
         </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -113,7 +119,7 @@ export const Navbar = () => {
                   e.preventDefault();
                   handleNavClick(item.href);
                 }}
-                className="text-sm text-white/60 hover:text-white transition-colors
+                className="text-sm text-text-muted hover:text-text transition-colors
                            uppercase tracking-wider font-mono"
               >
                 {item.label}

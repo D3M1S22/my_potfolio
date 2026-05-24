@@ -53,7 +53,7 @@ export const LandingPage = () => {
         {/* Footer */}
         <footer className="h-screen flex items-center justify-center">
           <div className="text-center">
-            <p className="text-white/30 font-mono text-sm uppercase tracking-widest mb-4">
+            <p className="text-text-faint font-mono text-sm uppercase tracking-widest mb-4">
               Thanks for scrolling
             </p>
             <p className="font-display text-2xl md:text-3xl font-bold text-gradient">
@@ -64,7 +64,7 @@ export const LandingPage = () => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors duration-200 text-sm font-mono"
+                className="text-text-faint hover:text-text transition-colors duration-200 text-sm font-mono"
                 aria-label="GitHub profile"
               >
                 GitHub
@@ -73,20 +73,20 @@ export const LandingPage = () => {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors duration-200 text-sm font-mono"
+                className="text-text-faint hover:text-text transition-colors duration-200 text-sm font-mono"
                 aria-label="LinkedIn profile"
               >
                 LinkedIn
               </a>
               <a
                 href="mailto:hello@example.com"
-                className="text-white/40 hover:text-white transition-colors duration-200 text-sm font-mono"
+                className="text-text-faint hover:text-text transition-colors duration-200 text-sm font-mono"
                 aria-label="Email me"
               >
                 Email
               </a>
             </div>
-            <p className="mt-12 text-white/15 text-xs font-mono">
+            <p className="mt-12 text-text-faint text-xs font-mono opacity-50">
               © {new Date().getFullYear()} Damiano Shushku
             </p>
           </div>

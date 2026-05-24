@@ -64,6 +64,12 @@ export const SectionPanel = ({
       className="relative h-screen flex items-center"
       style={{ zIndex: 10 }}
     >
+      {/* Massive subtle background ambient glow */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.03] dark:opacity-[0.05] blur-[100px] pointer-events-none"
+        style={{ backgroundColor: accentColor }}
+      />
+      
       <div
         ref={contentRef}
         className={`w-full max-w-xl mx-auto px-6 md:px-0 ${
@@ -90,7 +96,7 @@ export const SectionPanel = ({
           </h2>
 
           {/* Subtitle */}
-          <p className="text-sm uppercase tracking-widest text-white/40 font-mono mb-6">
+          <p className="text-sm uppercase tracking-widest text-text-muted font-mono mb-6">
             {subtitle}
           </p>
 
@@ -101,7 +107,7 @@ export const SectionPanel = ({
           />
 
           {/* Description */}
-          <p className="text-base md:text-lg leading-relaxed text-white/75">
+          <p className="text-base md:text-lg leading-relaxed text-text-muted">
             {description}
           </p>
 

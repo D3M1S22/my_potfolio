@@ -11,13 +11,13 @@ export const SmoothScroll = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Initialize physics-based smooth scrolling
     const lenis = new Lenis({
-      duration: 1.0, // Snappier scroll speed while retaining physics
+      duration: 1.5, // Increased from 1.0 to create a heavier, slower maximum speed
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom ease out
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1, // Standard wheel speed
-      touchMultiplier: 2, // Slightly faster touch
+      wheelMultiplier: 0.7, // Reduced from 1.0 to limit distance covered per scroll flick
+      touchMultiplier: 1.5, // Reduced slightly to match slower aesthetic
     });
     lenisRef.current = lenis;
 
