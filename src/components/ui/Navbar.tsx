@@ -13,6 +13,13 @@ const NAV_ITEMS = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoVisible, setLogoVisible] = useState(false);
+
+  useEffect(() => {
+    const handleHeroDocked = () => setLogoVisible(true);
+    window.addEventListener('heroNameDocked', handleHeroDocked);
+    return () => window.removeEventListener('heroNameDocked', handleHeroDocked);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,7 +56,7 @@ export const Navbar = () => {
             e.preventDefault();
             handleNavClick('#top');
           }}
-          className="font-display text-xl font-bold text-gradient hover:opacity-80 transition-opacity"
+          className={`font-display text-xl font-bold text-gradient transition-all duration-700 ${logoVisible ? 'opacity-100 translate-y-0 hover:opacity-80' : 'opacity-0 translate-y-4'}`}
           aria-label="Back to top"
         >
           DS.
