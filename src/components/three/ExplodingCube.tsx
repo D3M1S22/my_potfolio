@@ -120,9 +120,23 @@ const CubeGroup = () => {
 
 // ─── ExplodingCube (Canvas shell) ─────────────────────────────────────────────
 
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+import { PerformanceMonitor } from '@react-three/drei';
+
 export const ExplodingCube = () => {
   const wrapperRef      = useRef<HTMLDivElement>(null);
   const [heroActive, setHeroActive] = useState(true);
+  const { isLowTier } = useDevicePerformance();
+  const [dpr, setDpr] = useState<[number, number]>([1, 2]);
+
+  useEffect(() => {
+    // If device is strictly low tier on mount, limit DPR completely
+    if (isLowTier) {
+      setDpr([1, 1]);
+    } else {
+      setDpr([1, 2]);
+    }
+  }, [isLowTier]);
 
   // Enable the event-capture overlay only while in the hero section so the
   // canvas intercepts hover / click for cube interaction. Once scrolled past
@@ -162,12 +176,17 @@ export const ExplodingCube = () => {
       >
         <Canvas
           camera={{ position: [0, 0, 4.5], fov: 60 }}
-          dpr={[1, 2]}
-          gl={{ antialias: true, alpha: true }}
+          dpr={dpr}
+          gl={{ antialias: !isLowTier, alpha: true }}
           style={{ background: 'transparent', pointerEvents: 'none' }}
           eventSource={wrapperRef as React.MutableRefObject<HTMLElement>}
           eventPrefix="client"
         >
+          {/* Automatically downgrade pixel ratio if framerate drops below 60fps */}
+          <PerformanceMonitor 
+            onDecline={() => setDpr([1, 1])} 
+            onIncline={() => setDpr([1, 2])} 
+          />
           <Suspense fallback={null}>
             <ambientLight intensity={0.4} />
             <directionalLight position={[5, 5, 5]} intensity={1.2} />

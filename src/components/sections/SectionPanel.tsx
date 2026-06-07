@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,6 +26,7 @@ export const SectionPanel = ({
 }: SectionPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { isLowTier } = useDevicePerformance();
 
   useEffect(() => {
     if (!panelRef.current || !contentRef.current) return;
@@ -66,7 +68,7 @@ export const SectionPanel = ({
     >
       {/* Massive subtle background ambient glow */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.03] dark:opacity-[0.05] blur-[100px] pointer-events-none"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.03] dark:opacity-[0.05] pointer-events-none ${isLowTier ? '' : 'blur-[100px]'}`}
         style={{ backgroundColor: accentColor }}
       />
       
@@ -80,7 +82,7 @@ export const SectionPanel = ({
         <div className="glass rounded-2xl p-8 md:p-10 relative overflow-hidden group">
           {/* Accent glow */}
           <div
-            className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 blur-3xl transition-opacity duration-500 group-hover:opacity-40"
+            className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 transition-opacity duration-500 group-hover:opacity-40 ${isLowTier ? '' : 'blur-3xl'}`}
             style={{ backgroundColor: accentColor }}
           />
 
