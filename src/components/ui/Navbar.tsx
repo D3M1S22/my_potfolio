@@ -16,7 +16,7 @@ export const Navbar = () => {
   const [logoVisible, setLogoVisible] = useState(false);
 
   useEffect(() => {
-    const handleHeroDocked = () => setLogoVisible(true);
+    const handleHeroDocked = (e: any) => setLogoVisible(e.detail === true);
     window.addEventListener('heroNameDocked', handleHeroDocked);
     return () => window.removeEventListener('heroNameDocked', handleHeroDocked);
   }, []);

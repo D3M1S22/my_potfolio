@@ -44,28 +44,34 @@ export const HeroOverlay = () => {
           '-=0.2',
         );
 
-      // Animate name to top-left to become the logo
-      tl.to('.hero-name', {
+      // Animate name to top-left to become the logo ON SCROLL
+      gsap.to('.hero-name', {
         x: () => -window.innerWidth / 2 + (window.innerWidth < 768 ? 60 : 100),
         y: () => -window.innerHeight / 2 + 60,
         scale: 0.25,
         opacity: 0,
-        duration: 1.5,
-        ease: 'power3.inOut',
-        delay: 0.5,
-        onComplete: () => {
-          // Trigger a custom event to tell Navbar to show its logo
-          window.dispatchEvent(new Event('heroNameDocked'));
-        }
-      });
-
-      // Fade hero out on scroll
-      gsap.to('.hero-content', {
-        opacity: 0,
-        y: -100,
         scrollTrigger: {
           start: 0,
           end: () => window.innerHeight * 0.8,
+          scrub: true,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (self.progress > 0.9) {
+               window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: true }));
+            } else {
+               window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: false }));
+            }
+          }
+        },
+      });
+
+      // Fade out greeting, title, and CTA on scroll
+      gsap.to(['.hero-greeting', '.hero-title', '.hero-cta'], {
+        opacity: 0,
+        y: -50,
+        scrollTrigger: {
+          start: 0,
+          end: () => window.innerHeight * 0.4,
           scrub: true,
           invalidateOnRefresh: true,
         },
