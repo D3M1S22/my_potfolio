@@ -45,11 +45,7 @@ export const HeroOverlay = () => {
         );
 
       // Animate name to top-left to become the logo ON SCROLL
-      gsap.to('.hero-name', {
-        x: () => -window.innerWidth / 2 + (window.innerWidth < 768 ? 60 : 100),
-        y: () => -window.innerHeight / 2 + 160, // +100 to compensate for parent's y:-100 scrub
-        scale: 0.25,
-        opacity: 0,
+      const nameScrollTl = gsap.timeline({
         scrollTrigger: {
           start: 0,
           end: () => window.innerHeight * 0.8,
@@ -62,16 +58,27 @@ export const HeroOverlay = () => {
                window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: false }));
             }
           }
-        },
+        }
       });
 
-      // Fade hero out on scroll
-      gsap.to('.hero-content', {
+      nameScrollTl.to('.hero-name', {
+        x: () => -window.innerWidth / 2 + (window.innerWidth < 768 ? 60 : 100),
+        y: () => -window.innerHeight / 2 + 60,
+        scale: 0.25,
+        ease: 'none',
+      }, 0)
+      .to('.hero-name', {
         opacity: 0,
-        y: -100,
+        ease: 'expo.in', // Stays visible until the very end, then fades rapidly
+      }, 0);
+
+      // Fade out greeting, title, and CTA on scroll FAST so they don't glitch
+      gsap.to(['.hero-greeting', '.hero-title', '.hero-cta'], {
+        opacity: 0,
+        y: -50,
         scrollTrigger: {
           start: 0,
-          end: () => window.innerHeight * 0.8,
+          end: () => window.innerHeight * 0.3, // Fast fade before name overlaps
           scrub: true,
           invalidateOnRefresh: true,
         },
