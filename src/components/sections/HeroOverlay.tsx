@@ -73,14 +73,14 @@ export const HeroOverlay = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-10 flex items-center justify-center"
+      className="fixed inset-0 z-10 flex items-start justify-start"
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.015] dark:opacity-[0.025] blur-[120px] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta" />
 
-      <div className="text-left px-8 md:px-16 pt-32 max-w-3xl relative z-10 w-full h-full flex flex-col justify-start">
-        <div className="hero-content flex flex-col items-start mt-12">
+      <div className="text-left px-6 lg:px-24 pt-32 lg:pt-48 max-w-3xl relative z-10 w-full h-full flex flex-col justify-start">
+        <div className="hero-content flex flex-col items-start">
           {/* Greeting */}
           <p className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono mb-4 opacity-0">
             Hello, I&apos;m
