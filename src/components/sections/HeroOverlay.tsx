@@ -15,7 +15,7 @@ export const HeroOverlay = () => {
       const tl = gsap.timeline({ delay: 0.3 });
 
       tl.fromTo(
-        '.hero-greeting',
+        '.hero-top-text',
         { opacity: 0, y: 30 },
         { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
       )
@@ -26,16 +26,10 @@ export const HeroOverlay = () => {
           '-=0.4',
         )
         .fromTo(
-          '.hero-title',
-          { opacity: 0, y: 20 },
+          '.hero-bottom-text',
+          { opacity: 0, y: 30 },
           { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
           '-=0.5',
-        )
-        .fromTo(
-          '.hero-cta',
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
-          '-=0.3',
         )
         .fromTo(
           '.hero-scroll-hint',
@@ -62,25 +56,36 @@ export const HeroOverlay = () => {
       nameScrollTl.to('.hero-name-wrapper', {
         x: () => {
           const logo = document.getElementById('navbar-logo');
-          const wrapper = document.querySelector('.hero-name-wrapper');
-          if (logo && wrapper) {
+          const anchor = document.getElementById('hero-name-anchor');
+          if (logo && anchor) {
             const logoRect = logo.getBoundingClientRect();
-            const wrapperRect = wrapper.getBoundingClientRect();
-            return (logoRect.left + logoRect.width / 2) - (wrapperRect.left + wrapperRect.width / 2);
+            const anchorRect = anchor.getBoundingClientRect();
+            return (logoRect.left + logoRect.width / 2) - (anchorRect.left + anchorRect.width / 2);
           }
           return 0;
         },
         y: () => {
           const logo = document.getElementById('navbar-logo');
-          const wrapper = document.querySelector('.hero-name-wrapper');
-          if (logo && wrapper) {
+          const anchor = document.getElementById('hero-name-anchor');
+          if (logo && anchor) {
             const logoRect = logo.getBoundingClientRect();
-            const wrapperRect = wrapper.getBoundingClientRect();
-            return (logoRect.top + logoRect.height / 2) - (wrapperRect.top + wrapperRect.height / 2);
+            const anchorRect = anchor.getBoundingClientRect();
+            return (logoRect.top + logoRect.height / 2) - (anchorRect.top + anchorRect.height / 2);
           }
           return 0;
         },
-        scale: 0.2,
+        scale: () => {
+          const logo = document.getElementById('navbar-logo');
+          const word = document.querySelector('.hero-word-1');
+          if (logo && word) {
+             const logoStyle = window.getComputedStyle(logo);
+             const wordStyle = window.getComputedStyle(word);
+             const targetSize = parseFloat(logoStyle.fontSize) || 20;
+             const startSize = parseFloat(wordStyle.fontSize) || 96;
+             return targetSize / startSize;
+          }
+          return 0.2;
+        },
         ease: 'none',
         duration: 1
       }, 0);
@@ -116,7 +121,7 @@ export const HeroOverlay = () => {
 
       // Fade out greeting, title, and CTA smoothly over a longer distance
       // Using fromTo with immediateRender: false prevents GSAP from recording the pre-intro state
-      nameScrollTl.fromTo(['.hero-greeting', '.hero-title', '.hero-cta'], 
+      nameScrollTl.fromTo(['.hero-top-text', '.hero-bottom-text'], 
         { opacity: 1, y: 0 },
         {
           opacity: 0,
@@ -152,58 +157,67 @@ export const HeroOverlay = () => {
 
       <div className="text-center px-6 max-w-3xl relative z-10 w-full">
         <div className="hero-content flex flex-col items-center">
-          {/* Greeting */}
-          <p className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono mb-4 opacity-0">
-            Hello, I&apos;m
-          </p>
-
-          {/* Name Container for morphing states */}
-          <div 
-            className="hero-name-wrapper opacity-0 mb-4 relative inline-flex items-center justify-center pointer-events-auto cursor-pointer transition-opacity hover:opacity-80"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-             
-             {/* Invisible Stacked Placeholder for perfect pill sizing */}
-             <div className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
-               Damiano<br/>Shushku
-             </div>
-
-             {/* Glass Background */}
-             <div className="hero-glass-bg absolute inset-0 glass-subtle rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none"></div>
-
-             {/* True DOM is a ROW, positioned absolute center */}
-             <div className="hero-name-row absolute flex flex-row items-center justify-center gap-2 sm:gap-4">
-               <div className="hero-word-1 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
-                 <span className="text-gradient">D</span>
-                 <div className="hero-letters-1 overflow-hidden text-gradient" style={{ maxWidth: '1000px' }}>amiano</div>
-               </div>
-               
-               <div className="hero-word-2 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
-                 <span className="text-text">S</span>
-                 <div className="hero-letters-2 overflow-hidden text-text" style={{ maxWidth: '1000px' }}>hushku</div>
-                 <div className="hero-dot overflow-hidden text-gradient opacity-0" style={{ maxWidth: '0px' }}>.</div>
-               </div>
-             </div>
+          
+          {/* Greeting Wrapper */}
+          <div className="hero-top-text opacity-0 mb-4">
+            <p className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono">
+              Hello, I&apos;m
+            </p>
           </div>
 
-          {/* Title */}
-          <p className="hero-title text-lg md:text-xl text-text-muted font-light mb-8 opacity-0">
-            Developer &amp; Creative Technologist
-          </p>
+          {/* Static Layout Anchor for accurate un-transformed coordinate measuring */}
+          <div id="hero-name-anchor" className="relative inline-flex items-center justify-center mb-8">
+            
+            {/* Invisible Stacked Placeholder for perfect pill sizing */}
+            <div className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
+              Damiano<br/>Shushku
+            </div>
 
-          {/* CTA */}
-          <div className="hero-cta opacity-0 pointer-events-auto">
-            <button
-              className="px-8 py-3 rounded-full glass glow-accent text-text font-medium
-                         hover:scale-105 active:scale-95 transition-transform duration-200
-                         border border-white/10 hover:border-accent/30"
-              aria-label="Explore my work"
-              onClick={() => {
-                window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-              }}
+            {/* The Animatable Wrapper */}
+            <div 
+              className="hero-name-wrapper opacity-0 absolute inset-0 flex items-center justify-center pointer-events-auto cursor-pointer transition-opacity hover:opacity-80"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              Explore My Work
-            </button>
+               {/* Glass Background */}
+               <div className="hero-glass-bg absolute inset-0 glass-subtle rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none"></div>
+
+               {/* True DOM is a ROW, positioned absolute center */}
+               <div className="hero-name-row absolute flex flex-row items-center justify-center gap-2 sm:gap-4">
+                 <div className="hero-word-1 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
+                   <span className="text-gradient">D</span>
+                   <div className="hero-letters-1 overflow-hidden text-gradient" style={{ maxWidth: '1000px' }}>amiano</div>
+                 </div>
+                 
+                 <div className="hero-word-2 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
+                   <span className="text-text">S</span>
+                   <div className="hero-letters-2 overflow-hidden text-text" style={{ maxWidth: '1000px' }}>hushku</div>
+                   <div className="hero-dot overflow-hidden text-gradient opacity-0" style={{ maxWidth: '0px' }}>.</div>
+                 </div>
+               </div>
+            </div>
+          </div>
+
+          {/* Bottom Text Wrapper guarantees internal layout won't overlap when animated */}
+          <div className="hero-bottom-text opacity-0 flex flex-col items-center">
+            {/* Title */}
+            <p className="hero-title text-lg md:text-xl text-text-muted font-light mb-8">
+              Developer &amp; Creative Technologist
+            </p>
+
+            {/* CTA */}
+            <div className="hero-cta pointer-events-auto">
+              <button
+                className="px-8 py-3 rounded-full glass glow-accent text-text font-medium
+                           hover:scale-105 active:scale-95 transition-transform duration-200
+                           border border-white/10 hover:border-accent/30"
+                aria-label="Explore my work"
+                onClick={() => {
+                  window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+                }}
+              >
+                Explore My Work
+              </button>
+            </div>
           </div>
         </div>
 
