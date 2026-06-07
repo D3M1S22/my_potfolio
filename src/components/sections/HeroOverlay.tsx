@@ -62,9 +62,23 @@ export const HeroOverlay = () => {
       });
 
       nameScrollTl.to('.hero-name', {
-        x: () => -window.innerWidth / 2 + (window.innerWidth < 768 ? 60 : 100),
-        y: () => -window.innerHeight / 2 + 60,
-        scale: 0.25,
+        x: () => {
+          const logo = document.getElementById('navbar-logo');
+          if (logo) {
+            const rect = logo.getBoundingClientRect();
+            return rect.left + rect.width / 2 - window.innerWidth / 2;
+          }
+          return -window.innerWidth / 2 + 100;
+        },
+        y: () => {
+          const logo = document.getElementById('navbar-logo');
+          if (logo) {
+            const rect = logo.getBoundingClientRect();
+            return rect.top + rect.height / 2 - window.innerHeight / 2;
+          }
+          return -window.innerHeight / 2 + 60;
+        },
+        scale: 0.2,
         ease: 'none',
       }, 0)
       .to('.hero-name', {
@@ -101,7 +115,7 @@ export const HeroOverlay = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-10 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}
@@ -148,7 +162,7 @@ export const HeroOverlay = () => {
         <div className="hero-scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 opacity-0">
           <div className="flex flex-col items-center gap-3">
             <span className="text-xs md:text-sm uppercase tracking-[0.2em] text-text-muted font-mono font-medium">
-              Scroll to explore
+              Scroll to know me better
             </span>
             <div className="w-6 h-10 rounded-full border-2 border-[var(--color-glass-border)] flex items-start justify-center p-1.5 shadow-[0_0_15px_rgba(var(--color-accent),0.15)] relative overflow-hidden">
               <div className="w-1.5 h-2.5 rounded-full bg-gradient-to-b from-accent to-magenta opacity-90 animate-bounce relative z-10" />
