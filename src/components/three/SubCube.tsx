@@ -42,6 +42,7 @@ const GRID_OFFSETS: [number, number, number][] = [
 export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCubeProps) => {
   const meshRef  = useRef<THREE.Mesh>(null);
   const matRef   = useRef<THREE.MeshStandardMaterial>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const [hovered,    setHovered]    = useState(false);
   const [isAssembled, setIsAssembled] = useState(true);
@@ -136,30 +137,35 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     const exitRotX  = enterRotX + Math.PI * 0.5;
 
     // ── Phase 1 — STANDBY (Supernova Explode Outwards Off-screen) ────────────
-    gsap.timeline({
+    const tl1 = gsap.timeline({
       scrollTrigger: {
         trigger: heroEl,
-        start: '30% top', // Start after name has disappeared
+        start: '25% top', // Start slightly earlier to fade tooltips
         end:   '70% top', // Finish well before Phase 2 begins
         scrub: true,
         invalidateOnRefresh: true,
       },
-    })
-      .to(mesh.rotation, {
+    });
+
+    if (tooltipRef.current) {
+      tl1.to(tooltipRef.current, { opacity: 0, ease: 'power2.out', duration: 0.15 }, 0);
+    }
+
+    tl1.to(mesh.rotation, {
         x: () => Math.random() * Math.PI * 4,
         y: () => Math.random() * Math.PI * 4,
         z: () => Math.random() * Math.PI * 4,
         ease: 'none',
-        duration: 1,
-      }, 0)
+        duration: 0.85,
+      }, 0.15)
       .to(mesh.position, {
         x: () => offscreenRef.current.x,
         y: () => offscreenRef.current.y,
         z: () => offscreenRef.current.z,
         ease: 'none',
-        duration: 1,
-      }, 0)
-      .to(mat, { opacity: 0, ease: 'none', duration: 1 }, 0.2);
+        duration: 0.85,
+      }, 0.15)
+      .to(mat, { opacity: 0, ease: 'none', duration: 0.85 }, 0.15);
 
     // ── Phase 2 — ENTER (Sweeping Curved Pathway from Middle-Outside) ────────
     const getEnterStartX = () => isMobileRef.current ? 0 : (directionRef.current === 'left' ? widthRef.current * 0.8 : -widthRef.current * 0.8);
@@ -228,7 +234,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
 
     // Force assembly near top of page to prevent GSAP backwards-scroll race conditions
     const scrollY = window.scrollY || 0;
-    const isAtTop = scrollY < window.innerHeight * 0.2;
+    const isAtTop = scrollY < window.innerHeight * 0.25;
     if (isAtTop !== isAssembled) {
       setIsAssembled(isAtTop);
     }
@@ -364,38 +370,36 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         opacity={1}
       />
 
-      {/* Blueprint Diagram Tooltips — always visible in assembled state with dynamic hover active styling */}
-      {isAssembled && (
-        <Html
-          center
-          distanceFactor={4.5}
-          position={tooltipPosition}
-          occlude
+      {/* Blueprint Diagram Tooltips — always in DOM, faded by GSAP */}
+      <Html
+        center
+        distanceFactor={4.5}
+        position={tooltipPosition}
+        occlude
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
+        <div
+          ref={tooltipRef}
+          className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
+                      tracking-wider uppercase relative opacity-90"
           style={{
-            pointerEvents: 'none',
-            userSelect: 'none',
-            transition: 'opacity 0.3s ease-in-out'
+            transition:    'background 0.3s, border 0.3s, color 0.3s, box-shadow 0.3s, transform 0.3s, backdrop-filter 0.3s',
+            background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
+            backdropFilter:hovered ? 'blur(12px)' : 'none',
+            border:        `1px solid ${hovered ? color : 'transparent'}`,
+            color:         hovered ? '#ffffff' : color,
+            boxShadow:     hovered 
+              ? `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.5)`
+              : 'none',
+            transform:     hovered ? 'scale(1.1)' : 'scale(1)',
           }}
         >
-          <div
-            className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
-                        tracking-wider uppercase transition-all duration-300 relative"
-            style={{
-              background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
-              backdropFilter:hovered ? 'blur(12px)' : 'none',
-              border:        `1px solid ${hovered ? color : 'transparent'}`,
-              color:         hovered ? '#ffffff' : color,
-              boxShadow:     hovered 
-                ? `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.5)`
-                : 'none',
-              transform:     hovered ? 'scale(1.1)' : 'scale(1)',
-              opacity:       0.9,
-            }}
-          >
-            {label}
-          </div>
-        </Html>
-      )}
+          {label}
+        </div>
+      </Html>
     </RoundedBox>
   );
 };
