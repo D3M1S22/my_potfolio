@@ -44,7 +44,7 @@ export const HeroOverlay = () => {
           '-=0.2',
         );
 
-      // Animate name to top-left and morph states ON SCROLL
+      // Animate name ON SCROLL
       const nameScrollTl = gsap.timeline({
         scrollTrigger: {
           start: 0,
@@ -61,7 +61,11 @@ export const HeroOverlay = () => {
         }
       });
 
-      // 1. Move and scale wrapper over the entire scrub
+      // INITIAL STATE: Stack the words
+      gsap.set('.hero-word-1', { xPercent: 50, yPercent: -55 });
+      gsap.set('.hero-word-2', { xPercent: -50, yPercent: 55 });
+
+      // 1. Move and scale wrapper to top-left over the entire scrub
       nameScrollTl.to('.hero-name-wrapper', {
         x: () => {
           const logo = document.getElementById('navbar-logo');
@@ -84,20 +88,41 @@ export const HeroOverlay = () => {
         duration: 1
       }, 0);
 
-      // 2. Crossfade Stacked -> Row (10% to 40% of scroll)
-      nameScrollTl.to('.name-stacked', { opacity: 0, ease: 'none', duration: 0.3 }, 0.1);
-      nameScrollTl.to('.name-row', { opacity: 1, ease: 'none', duration: 0.3 }, 0.1);
+      // 2. Fade out glass early
+      nameScrollTl.to('.hero-glass-bg', { opacity: 0, duration: 0.15 }, 0);
 
-      // 3. Crossfade Row -> DS Logo (60% to 90% of scroll)
-      nameScrollTl.to('.name-row', { opacity: 0, ease: 'none', duration: 0.3 }, 0.6);
-      nameScrollTl.to('.name-ds', { opacity: 1, ease: 'none', duration: 0.3 }, 0.6);
+      // 3. Form row (unstack)
+      nameScrollTl.to('.hero-word-1', { xPercent: 0, yPercent: 0, ease: 'power2.out', duration: 0.3 }, 0.15);
+      nameScrollTl.to('.hero-word-2', { xPercent: 0, yPercent: 0, ease: 'power2.out', duration: 0.3 }, 0.15);
 
-      // 4. Final hide of wrapper to swap to actual navbar logo
+      // 4. Typographic Collapse
+      nameScrollTl.to(['.hero-letters-1', '.hero-letters-2'], { 
+        maxWidth: 0, 
+        opacity: 0, 
+        ease: 'power3.inOut', 
+        duration: 0.3 
+      }, 0.5);
+      
+      // Animate the gap to 0 so D and S touch perfectly
+      nameScrollTl.to('.hero-name-row', { 
+        gap: 0, 
+        ease: 'power3.inOut', 
+        duration: 0.3 
+      }, 0.5);
+
+      nameScrollTl.to('.hero-dot', { 
+        maxWidth: '1em', 
+        opacity: 1, 
+        ease: 'power3.inOut', 
+        duration: 0.2 
+      }, 0.6);
+
+      // 5. Hide wrapper exactly when logo is swapped
       nameScrollTl.to('.hero-name-wrapper', {
         opacity: 0,
         ease: 'expo.in',
-        duration: 0.1
-      }, 0.9);
+        duration: 0.05
+      }, 0.95);
 
       // Fade out greeting, title, and CTA smoothly over a longer distance
       gsap.to(['.hero-greeting', '.hero-title', '.hero-cta'], {
@@ -142,24 +167,23 @@ export const HeroOverlay = () => {
           </p>
 
           {/* Name Container for morphing states */}
-          <div className="hero-name-wrapper opacity-0 mb-4 relative flex items-center justify-center">
-            {/* 1. Stacked Name */}
-            <h1 className="name-stacked font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-8 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl text-center">
-              <span className="text-gradient">Damiano</span>
-              <br />
-              <span className="text-text">Shushku</span>
-            </h1>
+          <div className="hero-name-wrapper opacity-0 mb-4 relative flex items-center justify-center w-[280px] sm:w-[380px] md:w-[460px] lg:w-[520px] h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px]">
+             {/* Glass Background */}
+             <div className="hero-glass-bg absolute inset-0 glass-subtle rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none"></div>
 
-            {/* 2. Row Name */}
-            <h1 className="name-row absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-12 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl flex items-center justify-center whitespace-nowrap opacity-0 pointer-events-none">
-              <span className="text-gradient mr-4 lg:mr-6">Damiano</span>
-              <span className="text-text">Shushku</span>
-            </h1>
-
-            {/* 3. DS Logo Name */}
-            <h1 className="name-ds absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-8 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl flex items-center justify-center opacity-0 pointer-events-none">
-              <span className="text-gradient">DS.</span>
-            </h1>
+             {/* True DOM is a ROW, positioned absolute center */}
+             <div className="hero-name-row absolute flex flex-row items-center justify-center gap-2 sm:gap-4">
+               <div className="hero-word-1 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
+                 <span className="text-gradient">D</span>
+                 <div className="hero-letters-1 overflow-hidden text-gradient" style={{ maxWidth: '1000px' }}>amiano</div>
+               </div>
+               
+               <div className="hero-word-2 flex items-center justify-center font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold">
+                 <span className="text-text">S</span>
+                 <div className="hero-letters-2 overflow-hidden text-text" style={{ maxWidth: '1000px' }}>hushku</div>
+                 <div className="hero-dot overflow-hidden text-gradient opacity-0" style={{ maxWidth: '0px' }}>.</div>
+               </div>
+             </div>
           </div>
 
           {/* Title */}
