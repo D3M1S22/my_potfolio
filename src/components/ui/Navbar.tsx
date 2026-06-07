@@ -13,13 +13,6 @@ const NAV_ITEMS = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [logoVisible, setLogoVisible] = useState(false);
-
-  useEffect(() => {
-    const handleHeroDocked = (e: any) => setLogoVisible(e.detail === true);
-    window.addEventListener('heroNameDocked', handleHeroDocked);
-    return () => window.removeEventListener('heroNameDocked', handleHeroDocked);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,16 +42,12 @@ export const Navbar = () => {
       aria-label="Main navigation"
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo (Invisible Anchor for Hero Animation) */}
         <a
           id="navbar-logo"
           href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            handleNavClick('#top');
-          }}
-          className={`font-display text-xl font-bold text-gradient transition-all duration-700 ${logoVisible ? 'opacity-100 translate-y-0 hover:opacity-80' : 'opacity-0 translate-y-4'}`}
-          aria-label="Back to top"
+          className="font-display text-xl font-bold text-gradient opacity-0 pointer-events-none"
+          aria-hidden="true"
         >
           DS.
         </a>

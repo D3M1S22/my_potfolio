@@ -51,13 +51,6 @@ export const HeroOverlay = () => {
           end: () => window.innerHeight * 0.8,
           scrub: true,
           invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            if (self.progress > 0.95) {
-               window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: true }));
-            } else {
-               window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: false }));
-            }
-          }
         }
       });
 
@@ -121,13 +114,6 @@ export const HeroOverlay = () => {
         duration: 0.2 
       }, 0.6);
 
-      // 5. Hide wrapper exactly when logo is swapped
-      nameScrollTl.to('.hero-name-wrapper', {
-        opacity: 0,
-        ease: 'expo.in',
-        duration: 0.05
-      }, 0.95);
-
       // Fade out greeting, title, and CTA smoothly over a longer distance
       // Using fromTo with immediateRender: false prevents GSAP from recording the pre-intro state
       nameScrollTl.fromTo(['.hero-greeting', '.hero-title', '.hero-cta'], 
@@ -172,7 +158,10 @@ export const HeroOverlay = () => {
           </p>
 
           {/* Name Container for morphing states */}
-          <div className="hero-name-wrapper opacity-0 mb-4 relative inline-flex items-center justify-center">
+          <div 
+            className="hero-name-wrapper opacity-0 mb-4 relative inline-flex items-center justify-center pointer-events-auto cursor-pointer transition-opacity hover:opacity-80"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
              
              {/* Invisible Stacked Placeholder for perfect pill sizing */}
              <div className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
