@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 import { SubCube } from './SubCube';
 import { SECTIONS_DATA } from '@/components/sections/sections-data';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -123,17 +124,27 @@ const CubeGroup = () => {
 export const ExplodingCube = () => {
   const wrapperRef      = useRef<HTMLDivElement>(null);
   const [heroActive, setHeroActive] = useState(true);
+  const isMobile        = useIsMobile();
 
   // Enable the event-capture overlay only while in the hero section so the
   // canvas intercepts hover / click for cube interaction. Once scrolled past
   // the hero the overlay is removed so section panels are fully interactive.
   useEffect(() => {
+    // Cache innerHeight to prevent layout thrashing on scroll
+    let cachedHeight = window.innerHeight;
+    const onResize = () => { cachedHeight = window.innerHeight; };
+    
     const onScroll = () =>
-      setHeroActive(window.scrollY < window.innerHeight * 0.85);
+      setHeroActive(window.scrollY < cachedHeight * 0.85);
 
+    window.addEventListener('resize', onResize, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
+    
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   return (
@@ -159,7 +170,7 @@ export const ExplodingCube = () => {
       >
         <Canvas
           camera={{ position: [0, 0, 4.5], fov: 60 }}
-          dpr={[1, 1.5]}
+          dpr={[1, isMobile ? 1.5 : 2]}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent', pointerEvents: 'none' }}
           eventSource={wrapperRef as React.MutableRefObject<HTMLElement>}

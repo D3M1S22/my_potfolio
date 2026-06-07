@@ -39,10 +39,11 @@ const GRID_OFFSETS: [number, number, number][] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCubeProps) => {
-  const meshRef  = useRef<THREE.Mesh>(null);
-  const matRef   = useRef<THREE.MeshStandardMaterial>(null);
+export const SubCube = ({ index, color, label, size = 0.5, gap = 0.05 }: SubCubeProps) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const matRef  = useRef<THREE.MeshStandardMaterial>(null);
 
+  // ── State ───────────────────────────────────────────────────────────────────
   const [hovered,    setHovered]    = useState(false);
   const [isAssembled, setIsAssembled] = useState(true);
   const [renderTooltips, setRenderTooltips] = useState(true);
@@ -230,6 +231,13 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
   const floatOffset  = useRef({ y: 0, ry: 0 });
   const breathOffset = useRef({ x: 0, y: 0, z: 0 });
   const assemblyWeight = useRef(1);
+  const cachedHeight = useRef(window.innerHeight);
+
+  useEffect(() => {
+    const onResize = () => { cachedHeight.current = window.innerHeight; };
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useFrame((_, delta) => {
     const mesh = meshRef.current;
@@ -241,7 +249,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     // Force assembly near top of page to prevent GSAP backwards-scroll race conditions
     // Aligned perfectly with GSAP Phase 1 trigger (30% of 300vh hero spacer = 90vh)
     const scrollY = window.scrollY || 0;
-    const isAtTop = scrollY < window.innerHeight * 0.9;
+    const isAtTop = scrollY < cachedHeight.current * 0.9;
     if (isAtTop !== isAssembled) {
       setIsAssembled(isAtTop);
     }
@@ -372,10 +380,10 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         >
           <div
             className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
-                        tracking-wider uppercase transition-all duration-200 relative"
+                        tracking-wider uppercase transition-colors transition-opacity duration-200 relative"
             style={{
-              background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
-              backdropFilter:hovered ? 'blur(12px)' : 'none',
+              background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : (isMobile ? 'rgba(15, 17, 21, 0.4)' : 'transparent'),
+              backdropFilter:hovered && !isMobile ? 'blur(12px)' : 'none',
               border:        `1px solid ${hovered ? color : 'transparent'}`,
               color:         hovered ? '#ffffff' : color,
               boxShadow:     hovered 
