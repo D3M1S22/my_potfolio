@@ -129,26 +129,27 @@ export const HeroOverlay = () => {
       }, 0.95);
 
       // Fade out greeting, title, and CTA smoothly over a longer distance
-      gsap.to(['.hero-greeting', '.hero-title', '.hero-cta'], {
-        opacity: 0,
-        y: -50,
-        scrollTrigger: {
-          start: 0,
-          end: () => window.innerHeight * 0.6,
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      // Using fromTo with immediateRender: false prevents GSAP from recording the pre-intro state
+      nameScrollTl.fromTo(['.hero-greeting', '.hero-title', '.hero-cta'], 
+        { opacity: 1, y: 0 },
+        {
+          opacity: 0,
+          y: -50,
+          ease: 'power2.inOut',
+          duration: 0.5,
+          immediateRender: false
+        }, 0
+      );
 
-      gsap.to('.hero-scroll-hint', {
-        opacity: 0,
-        scrollTrigger: {
-          start: 0,
-          end: () => window.innerHeight * 0.4,
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      nameScrollTl.fromTo('.hero-scroll-hint', 
+        { opacity: 1 },
+        {
+          opacity: 0,
+          ease: 'power2.inOut',
+          duration: 0.3,
+          immediateRender: false
+        }, 0
+      );
     }, containerRef);
 
     return () => ctx.revert();
@@ -171,7 +172,13 @@ export const HeroOverlay = () => {
           </p>
 
           {/* Name Container for morphing states */}
-          <div className="hero-name-wrapper opacity-0 mb-4 relative flex items-center justify-center w-[280px] sm:w-[380px] md:w-[460px] lg:w-[520px] h-[140px] sm:h-[180px] md:h-[220px] lg:h-[260px]">
+          <div className="hero-name-wrapper opacity-0 mb-4 relative inline-flex items-center justify-center">
+             
+             {/* Invisible Stacked Placeholder for perfect pill sizing */}
+             <div className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
+               Damiano<br/>Shushku
+             </div>
+
              {/* Glass Background */}
              <div className="hero-glass-bg absolute inset-0 glass-subtle rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none"></div>
 

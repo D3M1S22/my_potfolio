@@ -115,7 +115,7 @@ export const Navbar = () => {
       {/* Mobile Menu */}
       <div
         className={`md:hidden glass overflow-hidden transition-all duration-400 ${
-          menuOpen ? 'max-h-96 py-4' : 'max-h-0'
+          menuOpen ? 'max-h-96 py-4 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
         }`}
       >
         <ul className="flex flex-col items-center gap-4 px-6">
