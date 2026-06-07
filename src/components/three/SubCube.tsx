@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { useFrame, ThreeEvent, useThree } from '@react-three/fiber';
 import { Html, RoundedBox } from '@react-three/drei';
 import { useGSAP } from '@gsap/react';
@@ -42,10 +42,10 @@ const GRID_OFFSETS: [number, number, number][] = [
 export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCubeProps) => {
   const meshRef  = useRef<THREE.Mesh>(null);
   const matRef   = useRef<THREE.MeshStandardMaterial>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const [hovered,    setHovered]    = useState(false);
   const [isAssembled, setIsAssembled] = useState(true);
+  const [renderTooltips, setRenderTooltips] = useState(true);
 
   // ── Derived geometry and responsiveness ─────────────────────────────────────
 
@@ -114,6 +114,16 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
   targetRef.current = explodeTarget;
   offscreenRef.current = offscreenTarget;
 
+  // Fade out tooltips smoothly before unmounting
+  useEffect(() => {
+    if (isAssembled) {
+      setRenderTooltips(true);
+    } else {
+      const timer = setTimeout(() => setRenderTooltips(false), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [isAssembled]);
+
   // ── GSAP 3-phase scroll animation ──────────────────────────────────────────
 
   useGSAP(() => {
@@ -137,35 +147,30 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     const exitRotX  = enterRotX + Math.PI * 0.5;
 
     // ── Phase 1 — STANDBY (Supernova Explode Outwards Off-screen) ────────────
-    const tl1 = gsap.timeline({
+    gsap.timeline({
       scrollTrigger: {
         trigger: heroEl,
-        start: '25% top', // Start slightly earlier to fade tooltips
+        start: '30% top', // Start after name has disappeared
         end:   '70% top', // Finish well before Phase 2 begins
         scrub: true,
         invalidateOnRefresh: true,
       },
-    });
-
-    if (tooltipRef.current) {
-      tl1.to(tooltipRef.current, { opacity: 0, ease: 'power2.out', duration: 0.15 }, 0);
-    }
-
-    tl1.to(mesh.rotation, {
+    })
+      .to(mesh.rotation, {
         x: () => Math.random() * Math.PI * 4,
         y: () => Math.random() * Math.PI * 4,
         z: () => Math.random() * Math.PI * 4,
         ease: 'none',
-        duration: 0.85,
-      }, 0.15)
+        duration: 1,
+      }, 0)
       .to(mesh.position, {
         x: () => offscreenRef.current.x,
         y: () => offscreenRef.current.y,
         z: () => offscreenRef.current.z,
         ease: 'none',
-        duration: 0.85,
-      }, 0.15)
-      .to(mat, { opacity: 0, ease: 'none', duration: 0.85 }, 0.15);
+        duration: 1,
+      }, 0)
+      .to(mat, { opacity: 0, ease: 'none', duration: 1 }, 0.2);
 
     // ── Phase 2 — ENTER (Sweeping Curved Pathway from Middle-Outside) ────────
     const getEnterStartX = () => isMobileRef.current ? 0 : (directionRef.current === 'left' ? widthRef.current * 0.8 : -widthRef.current * 0.8);
@@ -234,7 +239,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
 
     // Force assembly near top of page to prevent GSAP backwards-scroll race conditions
     const scrollY = window.scrollY || 0;
-    const isAtTop = scrollY < window.innerHeight * 0.25;
+    const isAtTop = scrollY < window.innerHeight * 0.2;
     if (isAtTop !== isAssembled) {
       setIsAssembled(isAtTop);
     }
@@ -370,36 +375,38 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
         opacity={1}
       />
 
-      {/* Blueprint Diagram Tooltips — always in DOM, faded by GSAP */}
-      <Html
-        center
-        distanceFactor={4.5}
-        position={tooltipPosition}
-        occlude
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        <div
-          ref={tooltipRef}
-          className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
-                      tracking-wider uppercase relative opacity-90"
+      {/* Blueprint Diagram Tooltips — fade out gracefully before unmounting */}
+      {renderTooltips && (
+        <Html
+          center
+          distanceFactor={4.5}
+          position={tooltipPosition}
+          occlude
           style={{
-            transition:    'background 0.3s, border 0.3s, color 0.3s, box-shadow 0.3s, transform 0.3s, backdrop-filter 0.3s',
-            background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
-            backdropFilter:hovered ? 'blur(12px)' : 'none',
-            border:        `1px solid ${hovered ? color : 'transparent'}`,
-            color:         hovered ? '#ffffff' : color,
-            boxShadow:     hovered 
-              ? `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.5)`
-              : 'none',
-            transform:     hovered ? 'scale(1.1)' : 'scale(1)',
+            pointerEvents: 'none',
+            userSelect: 'none',
           }}
         >
-          {label}
-        </div>
-      </Html>
+          <div
+            className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-mono font-semibold
+                        tracking-wider uppercase transition-all duration-200 relative"
+            style={{
+              background:    hovered ? 'hsla(225, 25%, 8%, 0.85)' : 'transparent',
+              backdropFilter:hovered ? 'blur(12px)' : 'none',
+              border:        `1px solid ${hovered ? color : 'transparent'}`,
+              color:         hovered ? '#ffffff' : color,
+              boxShadow:     hovered 
+                ? `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.5)`
+                : 'none',
+              transform:     hovered ? 'scale(1.1)' : 'scale(1)',
+              opacity:       isAssembled ? 0.9 : 0,
+            }}
+          >
+            {label}
+          </div>
+        </Html>
+      )}
     </RoundedBox>
   );
 };
+
