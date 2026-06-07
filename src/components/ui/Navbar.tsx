@@ -34,10 +34,8 @@ export const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-        scrolled
-          ? 'glass py-3'
-          : 'bg-transparent py-5'
+      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-500 py-4 ${
+        scrolled ? 'glass' : 'bg-transparent'
       }`}
       aria-label="Main navigation"
     >

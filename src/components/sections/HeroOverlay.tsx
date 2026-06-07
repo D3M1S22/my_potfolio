@@ -149,13 +149,16 @@ export const HeroOverlay = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex flex-col pt-24 pb-8"
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.015] dark:opacity-[0.025] blur-[120px] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta" />
 
-      <div className="text-center px-6 max-w-3xl relative z-10 w-full">
+      {/* Spacer to push content to middle safely */}
+      <div className="flex-1 min-h-[2vh]" />
+
+      <div className="text-center px-6 max-w-3xl mx-auto relative z-10 w-full shrink-0">
         <div className="hero-content flex flex-col items-center">
           
           {/* Greeting Wrapper */}
@@ -220,9 +223,11 @@ export const HeroOverlay = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Scroll hint */}
-        <div className="hero-scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 opacity-0">
+      {/* Spacer to push scroll hint to bottom safely without absolute positioning collisions */}
+      <div className="flex-1 flex flex-col justify-end items-center min-h-[4vh] relative z-10 pointer-events-none">
+        <div className="hero-scroll-hint opacity-0 pb-4">
           <div className="flex flex-col items-center gap-3">
             <span className="text-xs md:text-sm uppercase tracking-[0.2em] text-text-muted font-mono font-medium">
               Scroll to know me better
