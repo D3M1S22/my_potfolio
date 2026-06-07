@@ -69,19 +69,23 @@ export const HeroOverlay = () => {
       nameScrollTl.to('.hero-name-wrapper', {
         x: () => {
           const logo = document.getElementById('navbar-logo');
-          if (logo) {
-            const rect = logo.getBoundingClientRect();
-            return rect.left + rect.width / 2 - window.innerWidth / 2;
+          const wrapper = document.querySelector('.hero-name-wrapper');
+          if (logo && wrapper) {
+            const logoRect = logo.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            return (logoRect.left + logoRect.width / 2) - (wrapperRect.left + wrapperRect.width / 2);
           }
-          return -window.innerWidth / 2 + 100;
+          return 0;
         },
         y: () => {
           const logo = document.getElementById('navbar-logo');
-          if (logo) {
-            const rect = logo.getBoundingClientRect();
-            return rect.top + rect.height / 2 - window.innerHeight / 2;
+          const wrapper = document.querySelector('.hero-name-wrapper');
+          if (logo && wrapper) {
+            const logoRect = logo.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            return (logoRect.top + logoRect.height / 2) - (wrapperRect.top + wrapperRect.height / 2);
           }
-          return -window.innerHeight / 2 + 60;
+          return 0;
         },
         scale: 0.2,
         ease: 'none',
