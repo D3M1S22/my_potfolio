@@ -153,10 +153,10 @@ export const HeroOverlay = () => {
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.015] dark:opacity-[0.025] blur-[120px] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60svh] rounded-full opacity-[0.015] dark:opacity-[0.025] blur-[120px] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta" />
 
       {/* Spacer to push content to middle safely */}
-      <div className="flex-1 min-h-[2vh]" />
+      <div className="flex-1 min-h-[2svh]" />
 
       <div className="text-center px-6 max-w-3xl mx-auto relative z-10 w-full shrink-0">
         <div className="hero-content flex flex-col items-center">
@@ -226,7 +226,7 @@ export const HeroOverlay = () => {
       </div>
 
       {/* Spacer to push scroll hint to bottom safely without absolute positioning collisions */}
-      <div className="flex-1 flex flex-col justify-end items-center min-h-[4vh] relative z-10 pointer-events-none">
+      <div className="flex-1 flex flex-col justify-end items-center min-h-[4svh] relative z-10 pointer-events-none">
         <div className="hero-scroll-hint opacity-0 pb-4">
           <div className="flex flex-col items-center gap-3">
             <span className="text-xs md:text-sm uppercase tracking-[0.2em] text-text-muted font-mono font-medium">

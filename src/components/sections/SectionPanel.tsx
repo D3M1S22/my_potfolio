@@ -58,10 +58,10 @@ export const SectionPanel = ({
   const isRight = direction === 'right';
 
   return (
-    <div
+    <section
       ref={panelRef}
       id={`section-${index}`}
-      className="relative h-screen flex items-center"
+      className="relative min-h-[100svh] flex items-center"
       style={{ zIndex: 10 }}
     >
       {/* Massive subtle background ambient glow */}
@@ -120,6 +120,6 @@ export const SectionPanel = ({
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

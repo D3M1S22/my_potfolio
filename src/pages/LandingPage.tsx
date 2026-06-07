@@ -32,7 +32,7 @@ export const LandingPage = () => {
         */}
         <div
           id="hero-spacer"
-          className="h-[300vh] pointer-events-none"
+          className="h-[300svh] pointer-events-none"
           aria-hidden="true"
         />
 
@@ -51,7 +51,7 @@ export const LandingPage = () => {
         ))}
 
         {/* Footer */}
-        <footer className="h-screen flex items-center justify-center">
+        <footer className="h-[100svh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-text-faint font-mono text-sm uppercase tracking-widest mb-4">
               Thanks for scrolling

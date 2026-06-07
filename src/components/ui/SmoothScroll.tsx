@@ -5,6 +5,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Fix iOS Safari address bar layout thrashing and scroll stuttering
+ScrollTrigger.normalizeScroll(true);
+
 export const SmoothScroll = ({ children }: { children: ReactNode }) => {
   const lenisRef = useRef<Lenis | null>(null);
 

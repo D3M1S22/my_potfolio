@@ -24,7 +24,7 @@ export const ScrollProgress = () => {
   }, []);
 
   return (
-    <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-[4px] h-[40vh] bg-[var(--color-glass-border)] rounded-full overflow-hidden">
+    <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-[4px] h-[40svh] bg-[var(--color-glass-border)] rounded-full overflow-hidden">
       {/* Scrollbar Thumb */}
       <div
         className="w-full transition-none rounded-full shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
