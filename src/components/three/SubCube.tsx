@@ -229,6 +229,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
 
   const floatOffset  = useRef({ y: 0, ry: 0 });
   const breathOffset = useRef({ x: 0, y: 0, z: 0 });
+  const assemblyWeight = useRef(1);
 
   useFrame((_, delta) => {
     const mesh = meshRef.current;
@@ -244,9 +245,6 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
       setIsAssembled(isAtTop);
     }
 
-    // Hover scale — lerp toward target
-    const hoverScaleTarget = hovered && isAssembled ? 1.25 : 1.0;
-
     // Emissive glow — lerp toward target
     const glowTarget = hovered && isAssembled ? 0.5 : 0.0;
     mat.emissiveIntensity = THREE.MathUtils.lerp(
@@ -255,80 +253,65 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
       1 - Math.pow(0.05, delta * 60),
     );
 
-    if (isAssembled) {
-      // Instant snap recovery if teleported away by GSAP race conditions during extreme scrolling
+    // Smooth weight between Assembled (1) and Disassembled (0)
+    // We use a quick lerp so the transition takes a fraction of a second, preventing any instant snaps.
+    const weightTarget = isAssembled ? 1 : 0;
+    assemblyWeight.current = THREE.MathUtils.lerp(
+      assemblyWeight.current,
+      weightTarget,
+      1 - Math.pow(0.01, delta * 60)
+    );
+    const w = assemblyWeight.current;
+
+    // Instant snap recovery if teleported away by extreme scrolling while assembled
+    if (w > 0.9) {
       const basePos = new THREE.Vector3(homePosition[0], homePosition[1], homePosition[2]);
       if (mesh.position.distanceTo(basePos) > 2.0) {
         mesh.position.copy(basePos);
         breathOffset.current = { x: 0, y: 0, z: 0 };
         floatOffset.current = { y: 0, ry: 0 };
       }
+    }
 
-      // Gentle breathing pulse inside the assembled cluster
-      const breathTime = performance.now() * 0.0015;
-      const breath = Math.sin(breathTime * 2.0 + index * 0.8) * 0.025;
-      
-      const targetBreathX = homePosition[0] * breath;
-      const targetBreathY = homePosition[1] * breath;
-      const targetBreathZ = homePosition[2] * breath;
+    // 1. Calculate raw "Assembled" breathing offsets
+    const breathTime = performance.now() * 0.0015;
+    const breath = Math.sin(breathTime * 2.0 + index * 0.8) * 0.025;
+    const rawBreathX = homePosition[0] * breath;
+    const rawBreathY = homePosition[1] * breath;
+    const rawBreathZ = homePosition[2] * breath;
 
-      // Apply additive breathing offset
-      const prevBX = breathOffset.current.x;
-      const prevBY = breathOffset.current.y;
-      const prevBZ = breathOffset.current.z;
+    // 2. Calculate raw "Disassembled" floating offsets
+    const rawRy = Math.sin(t * 0.8 + index * 1.1) * 0.15;
+    const rawFloatY = Math.sin(t * 0.6 + index * 0.7) * 0.05 + Math.cos(t * 1.2 + index * 1.3) * 0.02;
 
-      mesh.position.x += targetBreathX - prevBX;
-      mesh.position.y += targetBreathY - prevBY;
-      mesh.position.z += targetBreathZ - prevBZ;
+    // 3. Blend them using the continuous weight 'w'
+    const targetOffsetX = rawBreathX * w;
+    const targetOffsetY = rawBreathY * w + rawFloatY * (1 - w);
+    const targetOffsetZ = rawBreathZ * w;
+    const targetOffsetRy = rawRy * (1 - w);
 
-      breathOffset.current.x = targetBreathX;
-      breathOffset.current.y = targetBreathY;
-      breathOffset.current.z = targetBreathZ;
+    // Apply additive DELTAs to mesh to ensure GSAP is not overridden
+    mesh.position.x += targetOffsetX - breathOffset.current.x;
+    mesh.position.y += targetOffsetY - breathOffset.current.y;
+    mesh.position.z += targetOffsetZ - breathOffset.current.z;
+    mesh.rotation.y += targetOffsetRy - floatOffset.current.ry;
 
-      // Breathing scale combined with hover scaling
+    // Save current applied offsets to calculate deltas next frame
+    breathOffset.current.x = targetOffsetX;
+    breathOffset.current.y = targetOffsetY;
+    breathOffset.current.z = targetOffsetZ;
+    floatOffset.current.ry = targetOffsetRy;
+
+    // 4. Smooth scale blending
+    // Only enforce scale if assembled or hovered. 
+    // If disassembled (w < 0.01) and not hovered, we allow GSAP to freely animate the scale without fighting it.
+    if (w > 0.01 || hovered) {
       const breathScale = 1.0 + Math.sin(breathTime * 3.0 + index * 0.5) * 0.04;
-      const finalScaleTarget = hovered ? 1.25 : breathScale;
+      const baseScale = w * breathScale + (1 - w) * 1.0;
+      const finalScaleTarget = hovered ? 1.25 : baseScale;
+      
       mesh.scale.setScalar(
         THREE.MathUtils.lerp(mesh.scale.x, finalScaleTarget, 1 - Math.pow(0.05, delta * 60))
-      );
-
-      // Reset float offsets
-      const prevRy = floatOffset.current.ry;
-      mesh.rotation.y -= prevRy;
-      floatOffset.current.ry = 0;
-
-      const prevY = floatOffset.current.y;
-      mesh.position.y -= prevY;
-      floatOffset.current.y = 0;
-    } else {
-      // Reset breathing offset when not assembled
-      const prevBX = breathOffset.current.x;
-      const prevBY = breathOffset.current.y;
-      const prevBZ = breathOffset.current.z;
-
-      mesh.position.x -= prevBX;
-      mesh.position.y -= prevBY;
-      mesh.position.z -= prevBZ;
-
-      breathOffset.current.x = 0;
-      breathOffset.current.y = 0;
-      breathOffset.current.z = 0;
-
-      // Apply multi-frequency floating offsets (active state)
-      const prevRy = floatOffset.current.ry;
-      const newRy  = Math.sin(t * 0.8 + index * 1.1) * 0.15;
-      mesh.rotation.y += newRy - prevRy;
-      floatOffset.current.ry = newRy;
-
-      // Organic fluid float
-      const prevY  = floatOffset.current.y;
-      const newY   = Math.sin(t * 0.6 + index * 0.7) * 0.05 + Math.cos(t * 1.2 + index * 1.3) * 0.02;
-      mesh.position.y += newY - prevY;
-      floatOffset.current.y = newY;
-
-      // Settle scale smoothly back to hover target
-      mesh.scale.setScalar(
-        THREE.MathUtils.lerp(mesh.scale.x, hoverScaleTarget, 1 - Math.pow(0.05, delta * 60))
       );
     }
   });
