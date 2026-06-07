@@ -239,8 +239,9 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     const t = performance.now() * 0.001;
 
     // Force assembly near top of page to prevent GSAP backwards-scroll race conditions
+    // Aligned perfectly with GSAP Phase 1 trigger (30% of 300vh hero spacer = 90vh)
     const scrollY = window.scrollY || 0;
-    const isAtTop = scrollY < window.innerHeight * 0.2;
+    const isAtTop = scrollY < window.innerHeight * 0.9;
     if (isAtTop !== isAssembled) {
       setIsAssembled(isAtTop);
     }
