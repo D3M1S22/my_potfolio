@@ -20,7 +20,7 @@ export const HeroOverlay = () => {
         { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
       )
         .fromTo(
-          '.hero-name',
+          '.hero-name-wrapper',
           { opacity: 0, y: 40, scale: 0.95 },
           { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power3.out' },
           '-=0.4',
@@ -44,7 +44,7 @@ export const HeroOverlay = () => {
           '-=0.2',
         );
 
-      // Animate name to top-left to become the logo ON SCROLL
+      // Animate name to top-left and morph states ON SCROLL
       const nameScrollTl = gsap.timeline({
         scrollTrigger: {
           start: 0,
@@ -52,7 +52,7 @@ export const HeroOverlay = () => {
           scrub: true,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
-            if (self.progress > 0.9) {
+            if (self.progress > 0.95) {
                window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: true }));
             } else {
                window.dispatchEvent(new CustomEvent('heroNameDocked', { detail: false }));
@@ -61,7 +61,8 @@ export const HeroOverlay = () => {
         }
       });
 
-      nameScrollTl.to('.hero-name', {
+      // 1. Move and scale wrapper over the entire scrub
+      nameScrollTl.to('.hero-name-wrapper', {
         x: () => {
           const logo = document.getElementById('navbar-logo');
           if (logo) {
@@ -80,19 +81,31 @@ export const HeroOverlay = () => {
         },
         scale: 0.2,
         ease: 'none',
-      }, 0)
-      .to('.hero-name', {
-        opacity: 0,
-        ease: 'expo.in', // Stays visible until the very end, then fades rapidly
+        duration: 1
       }, 0);
 
-      // Fade out greeting, title, and CTA on scroll FAST so they don't glitch
+      // 2. Crossfade Stacked -> Row (10% to 40% of scroll)
+      nameScrollTl.to('.name-stacked', { opacity: 0, ease: 'none', duration: 0.3 }, 0.1);
+      nameScrollTl.to('.name-row', { opacity: 1, ease: 'none', duration: 0.3 }, 0.1);
+
+      // 3. Crossfade Row -> DS Logo (60% to 90% of scroll)
+      nameScrollTl.to('.name-row', { opacity: 0, ease: 'none', duration: 0.3 }, 0.6);
+      nameScrollTl.to('.name-ds', { opacity: 1, ease: 'none', duration: 0.3 }, 0.6);
+
+      // 4. Final hide of wrapper to swap to actual navbar logo
+      nameScrollTl.to('.hero-name-wrapper', {
+        opacity: 0,
+        ease: 'expo.in',
+        duration: 0.1
+      }, 0.9);
+
+      // Fade out greeting, title, and CTA smoothly over a longer distance
       gsap.to(['.hero-greeting', '.hero-title', '.hero-cta'], {
         opacity: 0,
         y: -50,
         scrollTrigger: {
           start: 0,
-          end: () => window.innerHeight * 0.3, // Fast fade before name overlaps
+          end: () => window.innerHeight * 0.6,
           scrub: true,
           invalidateOnRefresh: true,
         },
@@ -128,12 +141,24 @@ export const HeroOverlay = () => {
             Hello, I&apos;m
           </p>
 
-          {/* Name */}
-          <div className="hero-name opacity-0 mb-4">
-            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-8 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl">
+          {/* Name Container for morphing states */}
+          <div className="hero-name-wrapper opacity-0 mb-4 relative flex items-center justify-center">
+            {/* 1. Stacked Name */}
+            <h1 className="name-stacked font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-8 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl text-center">
               <span className="text-gradient">Damiano</span>
               <br />
               <span className="text-text">Shushku</span>
+            </h1>
+
+            {/* 2. Row Name */}
+            <h1 className="name-row absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-12 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl flex items-center justify-center whitespace-nowrap opacity-0 pointer-events-none">
+              <span className="text-gradient mr-4 lg:mr-6">Damiano</span>
+              <span className="text-text">Shushku</span>
+            </h1>
+
+            {/* 3. DS Logo Name */}
+            <h1 className="name-ds absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold glass-subtle px-8 py-6 rounded-3xl backdrop-blur-md border border-white/5 dark:border-white/5 shadow-2xl flex items-center justify-center opacity-0 pointer-events-none">
+              <span className="text-gradient">DS.</span>
             </h1>
           </div>
 
