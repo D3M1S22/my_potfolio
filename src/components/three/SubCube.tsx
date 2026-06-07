@@ -341,7 +341,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
       ref={meshRef as any}
       args={[size, size, size]}
       radius={0.08}
-      smoothness={4}
+      smoothness={2}
       position={homePosition}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
@@ -365,7 +365,6 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
           center
           distanceFactor={4.5}
           position={tooltipPosition}
-          occlude
           style={{
             pointerEvents: 'none',
             userSelect: 'none',

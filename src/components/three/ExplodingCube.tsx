@@ -159,7 +159,7 @@ export const ExplodingCube = () => {
       >
         <Canvas
           camera={{ position: [0, 0, 4.5], fov: 60 }}
-          dpr={[1, 2]}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: true }}
           style={{ background: 'transparent', pointerEvents: 'none' }}
           eventSource={wrapperRef as React.MutableRefObject<HTMLElement>}
@@ -173,7 +173,7 @@ export const ExplodingCube = () => {
 
             <CubeGroup />
 
-            <Environment preset="city" />
+            <Environment preset="city" resolution={256} />
           </Suspense>
         </Canvas>
       </div>
