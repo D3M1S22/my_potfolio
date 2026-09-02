@@ -1,7 +1,5 @@
 ---
 trigger: always_on
-description: "SEO best practices, semantic HTML5, accessibility, Core Web Vitals optimization."
-globs: ["src/**/*.tsx", "*.html", "index.html"]
 ---
 
 # SEO, Accessibility & Performance (Antigravity)
