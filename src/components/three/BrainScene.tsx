@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 import { BrainCanvas } from './BrainCanvas';
 import { useBrainRegions } from './useBrainRegions';
@@ -10,14 +8,14 @@ import { BRAIN_REGIONS, type BrainRegionId } from '@/data/brain-regions';
 import { prefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { DEVICE } from '@/lib/device';
 
-gsap.registerPlugin(ScrollTrigger);
-
 // ─── Concept ──────────────────────────────────────────────────────────────────
 //
 // The brain stays whole. In the hero it slowly turns and every region shows its
 // section colour. While a section is on screen the brain glides to the side
 // opposite its card, turns to face that section's region, and the region lights
 // up and lifts out while the rest of the brain fades to a translucent ghost.
+// The active section is the one whose card is closest to the middle of the
+// screen, and the brain follows that card vertically as it scrolls.
 
 const HERO = -1;
 const FOOTER = SECTIONS_DATA.length;
@@ -87,7 +85,27 @@ const Brain = ({ labelRef }: BrainProps) => {
       ),
     [],
   );
-  useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
+  // Cut surfaces closing each region: darker "inner tissue" in the region's hue
+  const cutMaterials = useMemo(
+    () =>
+      SECTIONS_DATA.map(
+        (s) =>
+          new THREE.MeshStandardMaterial({
+            color: new THREE.Color(s.accentColor).lerp(new THREE.Color('#3b1d2e'), 0.55),
+            emissive: new THREE.Color(s.accentColor),
+            emissiveIntensity: 0.04,
+            roughness: 0.85,
+            metalness: 0,
+            side: THREE.DoubleSide,
+            transparent: true,
+          }),
+      ),
+    [],
+  );
+  useEffect(
+    () => () => [...materials, ...cutMaterials].forEach((m) => m.dispose()),
+    [materials, cutMaterials],
+  );
 
   /** Outward direction each region lifts along when highlighted. */
   const liftDirs = useMemo(
@@ -100,18 +118,15 @@ const Brain = ({ labelRef }: BrainProps) => {
 
   const state = useRef<RegionState[]>(SECTIONS_DATA.map(() => ({ opacity: 1, emissive: 0.08, lift: 0 })));
 
-  // Section boundaries from ScrollTrigger (kept correct across resizes/refreshes)
-  const triggers = useRef<ScrollTrigger[]>([]);
+  // Section cards, in section order (the brain follows the one in view)
+  const cardsRef = useRef<HTMLElement[]>([]);
+  const lastActiveRef = useRef(HERO);
+  const switchTimeRef = useRef(0);
   useEffect(() => {
-    triggers.current = SECTIONS_DATA.map((s) =>
-      ScrollTrigger.create({
-        trigger: `#${s.id}`,
-        start: 'top 62%',
-        end: 'bottom 62%',
-        onRefresh: () => invalidate(),
-      }),
-    );
-    return () => triggers.current.forEach((t) => t.kill());
+    cardsRef.current = SECTIONS_DATA.map((sd) =>
+      document.querySelector<HTMLElement>(`#${sd.id} [data-section-card]`),
+    ).filter((el): el is HTMLElement => el !== null);
+    invalidate();
   }, [invalidate]);
 
   const tmpQuat = useMemo(() => new THREE.Quaternion(), []);
@@ -126,14 +141,34 @@ const Brain = ({ labelRef }: BrainProps) => {
     const dt = Math.min(rawDelta, 0.1);
     let moving = false;
 
-    // ── Which part of the page are we in? ──────────────────────────────────
-    const y = window.scrollY;
-    const ts = triggers.current;
+    // ── Which section is in view? The card closest to the screen's middle ──
+    const vh = size.height;
+    const cards = cardsRef.current;
     let active = HERO;
-    if (ts.length) {
-      if (y >= ts[ts.length - 1].end) active = FOOTER;
-      else for (let i = 0; i < ts.length; i++) if (y >= ts[i].start) active = i;
+    let cardRect: DOMRect | null = null;
+    if (cards.length) {
+      const first = cards[0].getBoundingClientRect();
+      const last = cards[cards.length - 1].getBoundingClientRect();
+      if (first.top + first.height / 2 > vh * 0.92) active = HERO;
+      else if (last.top + last.height / 2 < vh * 0.08) active = FOOTER;
+      else {
+        let best = Infinity;
+        for (let i = 0; i < cards.length; i++) {
+          const r = cards[i].getBoundingClientRect();
+          const d = Math.abs(r.top + r.height / 2 - vh / 2);
+          if (d < best) {
+            best = d;
+            active = i;
+            cardRect = r;
+          }
+        }
+      }
     }
+    if (active !== lastActiveRef.current) {
+      lastActiveRef.current = active;
+      switchTimeRef.current = 0;
+    }
+    switchTimeRef.current += dt;
     activeRef.current = active;
     const inSection = active >= 0 && active < FOOTER;
 
@@ -142,23 +177,35 @@ const Brain = ({ labelRef }: BrainProps) => {
     let tx = 0;
     let ty = 0;
     let tScale = portrait ? Math.min(1.0, viewport.width / 2.3) : Math.min(1.45, viewport.width * 0.17);
-    if (inSection) {
+    const toWorldY = (screenY: number) => (0.5 - screenY / vh) * viewport.height;
+    if (inSection && cardRect) {
       const cardOnLeft = SECTIONS_DATA[active].direction === 'left';
       if (portrait) {
-        // Upper part of the screen; the card sits in the lower half
-        ty = viewport.height * 0.27;
-        tScale = Math.min(0.78, viewport.width / 2.9);
+        // Ride in the free space above the card and scroll together with it
+        tScale = Math.min(0.62, viewport.width / 3.8);
+        const brainPx = 1.45 * tScale * (vh / viewport.height);
+        // ...but never so high that the region label slides under the navbar
+        // (a tall card may then cover the bottom of the brain a little)
+        const minY = 80 + 64 + brainPx * 0.25;
+        const screenY = Math.max(minY, cardRect.top - brainPx / 2 - 14);
+        ty = toWorldY(Math.min(vh * 1.3, screenY));
       } else {
+        // Beside the card, level with its centre (kept within the middle band)
         tx = (cardOnLeft ? 1 : -1) * viewport.width * 0.23;
         tScale = Math.min(1.2, viewport.width * 0.135);
+        const centre = cardRect.top + cardRect.height / 2;
+        ty = toWorldY(Math.min(vh * 0.68, Math.max(vh * 0.32, centre)));
       }
     } else if (active === FOOTER) {
       ty = viewport.height * (portrait ? 0.27 : 0.24);
       tScale *= 0.6;
     }
+    // Follow the card tightly; glide more softly right after switching section
+    const following = inSection && switchTimeRef.current > 0.7;
     const k = reducedMotion ? 1 : damp(4.5, dt);
+    const ky = reducedMotion ? 1 : damp(following ? 14 : 4.5, dt);
     placement.position.x += (tx - placement.position.x) * k;
-    placement.position.y += (ty - placement.position.y) * k;
+    placement.position.y += (ty - placement.position.y) * ky;
     const sc = placement.scale.x + (tScale - placement.scale.x) * k;
     placement.scale.setScalar(sc);
     if (Math.abs(tx - placement.position.x) + Math.abs(ty - placement.position.y) + Math.abs(tScale - sc) > 1e-3)
@@ -205,6 +252,10 @@ const Brain = ({ labelRef }: BrainProps) => {
       m.opacity = s.opacity;
       m.emissiveIntensity = s.emissive;
       m.depthWrite = s.opacity > 0.9; // ghosts must not hide what's behind them
+      const cm = cutMaterials[i];
+      // Inner walls stay subtler than the surface inside the ghost
+      cm.opacity = s.opacity > 0.9 ? s.opacity : s.opacity * 0.7;
+      cm.depthWrite = m.depthWrite;
       const mesh = meshRefs.current[i];
       if (mesh) {
         mesh.position.copy(regions[i].home).addScaledVector(liftDirs[i], s.lift);
@@ -275,7 +326,9 @@ const Brain = ({ labelRef }: BrainProps) => {
             onPointerOver={DEVICE.isMobile ? undefined : onOver(i)}
             onPointerOut={DEVICE.isMobile ? undefined : onOut(i)}
             onClick={onClick(i)}
-          />
+          >
+            {r.capGeometry && <mesh geometry={r.capGeometry} material={cutMaterials[i]} />}
+          </mesh>
         ))}
       </group>
     </group>
@@ -295,7 +348,7 @@ const RegionLabel = ({ labelRef }: BrainProps) => (
         <p data-label-name className="font-mono text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.18em]" />
         <p data-label-section className="text-[10px] md:text-xs text-text-muted" />
       </div>
-      <span className="w-px h-6 md:h-10" style={{ background: 'var(--accent)' }} />
+      <span className="w-px h-5 md:h-16" style={{ background: 'var(--accent)' }} />
       <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)', boxShadow: '0 0 12px var(--accent)' }} />
     </div>
   </div>
