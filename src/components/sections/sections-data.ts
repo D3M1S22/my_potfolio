@@ -1,3 +1,5 @@
+import type { BrainRegionId } from '@/data/brain-regions';
+
 export interface SectionData {
   id: string;
   title: string;
@@ -6,6 +8,8 @@ export interface SectionData {
   icon: string;
   accentColor: string;
   direction: 'left' | 'right';
+  /** Brain region whose function mirrors this section */
+  region: BrainRegionId;
 }
 
 export const SECTIONS_DATA: SectionData[] = [
@@ -18,6 +22,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '👋',
     accentColor: '#7c5cf7',
     direction: 'left',
+    region: 'prefrontal',
   },
   {
     id: 'skills',
@@ -28,6 +33,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '⚡',
     accentColor: '#38bdf8',
     direction: 'right',
+    region: 'motor',
   },
   {
     id: 'projects',
@@ -38,6 +44,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '🚀',
     accentColor: '#f472b6',
     direction: 'left',
+    region: 'occipital',
   },
   {
     id: 'experience',
@@ -48,6 +55,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '💼',
     accentColor: '#fbbf24',
     direction: 'right',
+    region: 'temporal',
   },
   {
     id: 'education',
@@ -58,6 +66,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '🎓',
     accentColor: '#34d399',
     direction: 'left',
+    region: 'parietal',
   },
   {
     id: 'contact',
@@ -68,6 +77,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '✉️',
     accentColor: '#fb923c',
     direction: 'right',
+    region: 'broca',
   },
   {
     id: 'testimonials',
@@ -78,6 +88,7 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '💬',
     accentColor: '#a78bfa',
     direction: 'left',
+    region: 'wernicke',
   },
   {
     id: 'social',
@@ -88,5 +99,6 @@ export const SECTIONS_DATA: SectionData[] = [
     icon: '🌐',
     accentColor: '#f87171',
     direction: 'right',
+    region: 'corpus',
   },
 ];
