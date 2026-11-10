@@ -3,11 +3,12 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const NAV_ITEMS = [
   { label: 'Home', href: '#top' },
-  { label: 'About', href: '#section-0' },
-  { label: 'Skills', href: '#section-1' },
-  { label: 'Projects', href: '#section-2' },
-  { label: 'Experience', href: '#section-3' },
-  { label: 'Contact', href: '#section-5' },
+  { label: 'About', href: '#about' },
+  { label: 'Skills', href: '#skills' },
+  { label: 'Projects', href: '#projects' },
+  { label: 'Experience', href: '#experience' },
+  { label: 'Education', href: '#education' },
+  { label: 'Contact', href: '#contact' },
 ];
 
 export const Navbar = () => {
@@ -22,23 +23,36 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Escape closes the mobile menu
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   const handleNavClick = (href: string) => {
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    } else if (href === '#top') {
+    const el = document.querySelector<HTMLElement>(href);
+    if (href === '#top') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      // Move keyboard / screen-reader focus to the section that was jumped to
+      el.focus({ preventScroll: true });
     }
+    history.replaceState(null, '', href);
   };
 
   return (
-    <nav
+    <header
       className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-500 py-4 ${
         scrolled ? 'glass' : 'bg-transparent'
       }`}
-      aria-label="Main navigation"
     >
+      <nav aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo (Invisible Anchor for Hero Animation) */}
         <a
@@ -51,7 +65,7 @@ export const Navbar = () => {
         </a>
 
         {/* Desktop Nav */}
-        <ul className="hidden md:flex items-center gap-8">
+        <ul className="hidden md:flex items-center gap-6 lg:gap-8">
           {NAV_ITEMS.map((item) => (
             <li key={item.href}>
               <a
@@ -75,22 +89,27 @@ export const Navbar = () => {
 
           {/* Mobile Menu Toggle */}
           <button
-          className="md:hidden flex flex-col gap-1.5 p-2"
+          type="button"
+          className="md:hidden flex flex-col justify-center gap-1.5 w-11 h-11 p-2.5"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
         >
           <span
+            aria-hidden="true"
             className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? 'rotate-45 translate-y-2' : ''
             }`}
           />
           <span
+            aria-hidden="true"
             className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? 'opacity-0' : ''
             }`}
           />
           <span
+            aria-hidden="true"
             className={`w-6 h-0.5 bg-text transition-all duration-300 ${
               menuOpen ? '-rotate-45 -translate-y-2' : ''
             }`}
@@ -101,8 +120,11 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden glass overflow-hidden transition-all duration-400 ${
-          menuOpen ? 'max-h-96 py-4 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+        id="mobile-menu"
+        className={`md:hidden glass overflow-hidden transition-all duration-300 ${
+          menuOpen
+            ? 'max-h-[28rem] py-4 opacity-100 visible'
+            : 'max-h-0 opacity-0 pointer-events-none invisible'
         }`}
       >
         <ul className="flex flex-col items-center gap-4 px-6">
@@ -114,7 +136,7 @@ export const Navbar = () => {
                   e.preventDefault();
                   handleNavClick(item.href);
                 }}
-                className="text-sm text-text-muted hover:text-text transition-colors
+                className="block px-4 py-2 text-sm text-text-muted hover:text-text transition-colors
                            uppercase tracking-wider font-mono"
               >
                 {item.label}
@@ -123,6 +145,7 @@ export const Navbar = () => {
           ))}
         </ul>
       </div>
-    </nav>
+      </nav>
+    </header>
   );
 };

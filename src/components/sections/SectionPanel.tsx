@@ -2,10 +2,13 @@ import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface SectionPanelProps {
+  /** Anchor id used by the navbar, GSAP triggers and the 3D scene */
+  id: string;
   index: number;
   title: string;
   subtitle: string;
@@ -16,6 +19,7 @@ interface SectionPanelProps {
 }
 
 export const SectionPanel = ({
+  id,
   index,
   title,
   subtitle,
@@ -27,13 +31,17 @@ export const SectionPanel = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { isLowTier } = useDevicePerformance();
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (!panelRef.current || !contentRef.current) return;
 
     const ctx = gsap.context(() => {
       // Slide the content panel in from the opposite direction of the cube
-      const xFrom = direction === 'left' ? 120 : -120;
+      // Reduced motion: a plain fade, no sliding or scaling
+      const xFrom = reducedMotion ? 0 : direction === 'left' ? 120 : -120;
+      const scaleFrom = reducedMotion ? 1 : 0.9;
+      const yTo = reducedMotion ? 0 : -40;
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -47,27 +55,30 @@ export const SectionPanel = ({
 
       tl.fromTo(
         contentRef.current,
-        { opacity: 0, x: xFrom, scale: 0.9 },
+        { opacity: 0, x: xFrom, scale: scaleFrom },
         { opacity: 1, x: 0, scale: 1, duration: 30, ease: 'power3.out' }
       )
         .to({}, { duration: 45 }) // Hold text steady
-        .to(contentRef.current, { opacity: 0, y: -40, duration: 25, ease: 'power2.in' });
+        .to(contentRef.current, { opacity: 0, y: yTo, duration: 25, ease: 'power2.in' });
     }, panelRef);
 
     return () => ctx.revert();
-  }, [direction]);
+  }, [direction, reducedMotion]);
 
   const isRight = direction === 'right';
 
   return (
     <section
       ref={panelRef}
-      id={`section-${index}`}
-      className="relative min-h-[100svh] flex items-center"
+      id={id}
+      aria-labelledby={`${id}-title`}
+      tabIndex={-1}
+      className="relative min-h-[100svh] flex items-center focus:outline-none"
       style={{ zIndex: 10 }}
     >
       {/* Massive subtle background ambient glow */}
-      <div 
+      <div
+        aria-hidden="true"
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.03] dark:opacity-[0.05] pointer-events-none ${isLowTier ? '' : 'blur-[100px]'}`}
         style={{ backgroundColor: accentColor }}
       />
@@ -82,15 +93,17 @@ export const SectionPanel = ({
         <div className="glass rounded-2xl p-8 md:p-10 relative overflow-hidden group">
           {/* Accent glow */}
           <div
+            aria-hidden="true"
             className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 transition-opacity duration-500 group-hover:opacity-40 ${isLowTier ? '' : 'blur-3xl'}`}
             style={{ backgroundColor: accentColor }}
           />
 
           {/* Icon */}
-          <div className="text-4xl mb-4">{icon}</div>
+          <div className="text-4xl mb-4" aria-hidden="true">{icon}</div>
 
           {/* Title */}
           <h2
+            id={`${id}-title`}
             className="font-display text-3xl md:text-4xl font-bold mb-2"
             style={{ color: accentColor }}
           >
@@ -104,6 +117,7 @@ export const SectionPanel = ({
 
           {/* Divider */}
           <div
+            aria-hidden="true"
             className="w-12 h-0.5 rounded-full mb-6"
             style={{ backgroundColor: accentColor }}
           />
@@ -115,6 +129,7 @@ export const SectionPanel = ({
 
           {/* Section number */}
           <div
+            aria-hidden="true"
             className="absolute bottom-4 right-6 text-7xl font-display font-bold opacity-5"
             style={{ color: accentColor }}
           >

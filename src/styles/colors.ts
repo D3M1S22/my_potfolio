@@ -10,8 +10,8 @@ export const THEME_COLORS = {
     
     // Text
     '--color-text': 'hsl(0, 0%, 12%)',
-    '--color-text-muted': 'hsl(0, 0%, 45%)',
-    '--color-text-faint': 'hsl(0, 0%, 65%)',
+    '--color-text-muted': 'hsl(0, 0%, 36%)', // 6.9:1
+    '--color-text-faint': 'hsl(0, 0%, 42%)', // 4.9:1 on surface (WCAG AA)
     
     // Glass & Overlays
     '--color-glass-bg': 'hsla(0, 0%, 100%, 0.7)',
@@ -29,7 +29,7 @@ export const THEME_COLORS = {
     // Text
     '--color-text': 'hsl(0, 0%, 95%)',
     '--color-text-muted': 'hsl(0, 0%, 60%)',
-    '--color-text-faint': 'hsl(0, 0%, 40%)',
+    '--color-text-faint': 'hsl(0, 0%, 54%)', // 5.6:1 on surface (WCAG AA)
     
     // Glass & Overlays
     '--color-glass-bg': 'hsla(0, 0%, 12%, 0.6)',

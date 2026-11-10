@@ -1,4 +1,4 @@
-interface SectionData {
+export interface SectionData {
   id: string;
   title: string;
   subtitle: string;

@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 import { SubCube } from './SubCube';
 import { SECTIONS_DATA } from '@/components/sections/sections-data';
+import { prefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,7 +54,8 @@ const CoreLight = () => {
 
 const CubeGroup = () => {
   const groupRef    = useRef<THREE.Group>(null);
-  const speedRef    = useRef(1); // 1 = full speed, 0 = stopped
+  // 1 = full speed, 0 = stopped. No idle spin for reduced-motion users.
+  const speedRef    = useRef(prefersReducedMotion() ? 0 : 1);
 
   // GSAP ScrollTrigger: fade out the global rotation speed AND snap rotation to 0
   useGSAP(() => {
@@ -110,6 +112,7 @@ const CubeGroup = () => {
           index={i}
           color={color}
           label={SECTIONS_DATA[i].title}
+          sectionId={SECTIONS_DATA[i].id}
           size={0.48}
           gap={0.04}
         />

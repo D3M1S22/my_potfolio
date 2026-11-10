@@ -17,6 +17,8 @@ interface SubCubeProps {
   color: string;
   /** Section label shown in the tooltip */
   label: string;
+  /** DOM id of the section this cube belongs to */
+  sectionId: string;
   /** Side-length of each sub-cube in world units */
   size?: number;
   /** Gap between cubes in the assembled state */
@@ -39,7 +41,7 @@ const GRID_OFFSETS: [number, number, number][] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCubeProps) => {
+export const SubCube = ({ index, color, label, sectionId, size = 0.48, gap = 0.04 }: SubCubeProps) => {
   const meshRef  = useRef<THREE.Mesh>(null);
   const matRef   = useRef<THREE.MeshStandardMaterial>(null);
 
@@ -132,7 +134,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
     if (!mesh || !mat) return;
 
     const heroEl    = document.getElementById('hero-spacer');
-    const sectionEl = document.getElementById(`section-${index}`);
+    const sectionEl = document.getElementById(sectionId);
     if (!heroEl || !sectionEl) return;
 
     // Reset initial states before timeline starts.
@@ -223,7 +225,7 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
       .to(mesh.rotation, { x: exitRotX, y: enterRotY * 1.5, z: enterRotZ * 1.5, ease: 'power2.in', duration: 36 }, 64)
       .to(mat, { opacity: 0, ease: 'power1.in', duration: 15 }, 85);
 
-  }, [index, homePosition]); // Decoupled from viewport variables!
+  }, [index, homePosition, sectionId]); // Decoupled from viewport variables!
 
   // ── useFrame — dynamic organic states ───────────────────────────────────────
 
@@ -320,8 +322,8 @@ export const SubCube = ({ index, color, label, size = 0.48, gap = 0.04 }: SubCub
   // ── Interaction handlers ────────────────────────────────────────────────────
 
   const handleClick = useCallback(() => {
-    document.getElementById(`section-${index}`)?.scrollIntoView({ behavior: 'smooth' });
-  }, [index]);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+  }, [sectionId]);
 
   const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();

@@ -1,43 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
+/**
+ * Decorative scroll indicator. Hidden from assistive tech (the browser's own
+ * scroll position already conveys this) and updated through a ref so scrolling
+ * never triggers React re-renders.
+ */
 export const ScrollProgress = () => {
-  const [progress, setProgress] = useState(0);
+  const thumbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let raf = 0;
 
-    const handleScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const scrollTop = window.scrollY;
-        const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
-        setProgress(maxScroll > 0 ? Math.min(scrollTop / maxScroll, 1) : 0);
-      });
+    const update = () => {
+      raf = 0;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
+      if (thumbRef.current) thumbRef.current.style.transform = `scaleY(${progress})`;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
       cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
-    <div className="fixed top-1/2 right-6 -translate-y-1/2 z-50 w-[4px] h-[40svh] bg-[var(--color-glass-border)] rounded-full overflow-hidden">
-      {/* Scrollbar Thumb */}
+    <div
+      aria-hidden="true"
+      className="fixed top-1/2 right-3 md:right-6 -translate-y-1/2 z-50 w-[3px] md:w-[4px] h-[40svh] bg-[var(--color-glass-border)] rounded-full overflow-hidden pointer-events-none"
+    >
       <div
-        className="w-full transition-none rounded-full shadow-[0_0_15px_rgba(var(--color-accent),0.5)]"
+        ref={thumbRef}
+        className="w-full h-full rounded-full origin-top will-change-transform"
         style={{
-          height: `${progress * 100}%`,
+          transform: 'scaleY(0)',
           background:
             'linear-gradient(180deg, var(--color-accent-light), var(--color-cyan), var(--color-magenta))',
         }}
-        role="progressbar"
-        aria-valuenow={Math.round(progress * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Scroll progress"
       />
     </div>
   );

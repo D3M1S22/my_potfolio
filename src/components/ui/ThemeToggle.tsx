@@ -5,13 +5,17 @@ export const ThemeToggle = () => {
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
-      className="p-2 rounded-full glass-subtle hover:bg-[var(--color-glass-border)] transition-colors flex items-center justify-center relative overflow-hidden group"
+      aria-pressed={theme === 'light'}
+      className="w-11 h-11 p-2 rounded-full glass-subtle hover:bg-[var(--color-glass-border)] transition-colors flex items-center justify-center relative overflow-hidden group"
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <div className="relative w-5 h-5 flex items-center justify-center">
         {/* Sun Icon (visible in dark mode, slides down in light mode) */}
         <svg
+          aria-hidden="true"
+          focusable="false"
           className={`absolute inset-0 w-full h-full text-[var(--color-gold)] transition-all duration-500 ease-out ${
             theme === 'dark' ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-8 opacity-0 rotate-90'
           }`}
@@ -29,6 +33,8 @@ export const ThemeToggle = () => {
 
         {/* Moon Icon (visible in light mode, slides up in dark mode) */}
         <svg
+          aria-hidden="true"
+          focusable="false"
           className={`absolute inset-0 w-full h-full text-indigo-500 transition-all duration-500 ease-out ${
             theme === 'light' ? 'translate-y-0 opacity-100 rotate-0' : '-translate-y-8 opacity-0 -rotate-90'
           }`}

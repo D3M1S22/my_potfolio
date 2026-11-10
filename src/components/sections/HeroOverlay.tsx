@@ -155,7 +155,8 @@ export const HeroOverlay = () => {
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}
-      <div 
+      <div
+        aria-hidden="true"
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60svh] rounded-full opacity-[0.015] dark:opacity-[0.025] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta ${isLowTier ? '' : 'blur-[120px]'}`}
       />
 
@@ -167,21 +168,25 @@ export const HeroOverlay = () => {
           
           {/* Greeting Wrapper */}
           <div className="hero-top-text opacity-0 mb-4">
-            <p className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono">
+            <p aria-hidden="true" className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono">
               Hello, I&apos;m
             </p>
           </div>
 
           {/* Static Layout Anchor for accurate un-transformed coordinate measuring */}
-          <div id="hero-name-anchor" className="relative inline-flex items-center justify-center mb-8">
+          <h1 id="hero-name-anchor" className="relative inline-flex items-center justify-center mb-8">
+            {/* Accessible name — the visual letters below are split for animation */}
+            <span className="sr-only">Damiano Shushku</span>
+
             
             {/* Invisible Stacked Placeholder for perfect pill sizing */}
-            <div className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
+            <div aria-hidden="true" className="opacity-0 font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold px-8 py-6 pointer-events-none select-none text-center leading-[1.1]">
               Damiano<br/>Shushku
             </div>
 
             {/* The Animatable Wrapper */}
-            <div 
+            <div
+              aria-hidden="true"
               className="hero-name-wrapper opacity-0 absolute inset-0 flex items-center justify-center pointer-events-auto cursor-pointer transition-opacity hover:opacity-80"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
@@ -202,7 +207,7 @@ export const HeroOverlay = () => {
                  </div>
                </div>
             </div>
-          </div>
+          </h1>
 
           {/* Bottom Text Wrapper guarantees internal layout won't overlap when animated */}
           <div className="hero-bottom-text opacity-0 flex flex-col items-center">
@@ -214,10 +219,10 @@ export const HeroOverlay = () => {
             {/* CTA */}
             <div className="hero-cta pointer-events-auto">
               <button
+                type="button"
                 className="px-8 py-3 rounded-full glass glow-accent text-text font-medium
                            hover:scale-105 active:scale-95 transition-transform duration-200
                            border border-white/10 hover:border-accent/30"
-                aria-label="Explore my work"
                 onClick={() => {
                   window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
                 }}
@@ -231,7 +236,7 @@ export const HeroOverlay = () => {
 
       {/* Spacer to push scroll hint to bottom safely without absolute positioning collisions */}
       <div className="flex-1 flex flex-col justify-end items-center min-h-[4svh] relative z-10 pointer-events-none">
-        <div className="hero-scroll-hint opacity-0 pb-4">
+        <div className="hero-scroll-hint opacity-0 pb-4" aria-hidden="true">
           <div className="flex flex-col items-center gap-3">
             <span className="text-xs md:text-sm uppercase tracking-[0.2em] text-text-muted font-mono font-medium">
               Scroll to know me better

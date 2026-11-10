@@ -1,46 +1,47 @@
-import { useEffect, useRef, ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Fix iOS Safari address bar layout thrashing and scroll stuttering
 ScrollTrigger.normalizeScroll(true);
 
-export const SmoothScroll = ({ children }: { children: ReactNode }) => {
-  const lenisRef = useRef<Lenis | null>(null);
+interface SmoothScrollProps {
+  children: ReactNode;
+}
+
+export const SmoothScroll = ({ children }: SmoothScrollProps) => {
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    // Initialize physics-based smooth scrolling
+    // Users who ask for reduced motion get native, un-eased scrolling.
+    if (reducedMotion) return;
+
     const lenis = new Lenis({
-      duration: 1.5, // Increased from 1.0 to create a heavier, slower maximum speed
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom ease out
+      duration: 1.5, // heavier, slower maximum speed
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.7, // Reduced from 1.0 to limit distance covered per scroll flick
-      touchMultiplier: 1.5, // Reduced slightly to match slower aesthetic
+      wheelMultiplier: 0.7,
+      touchMultiplier: 1.5,
     });
-    lenisRef.current = lenis;
 
-    // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
-    // Add lenis requestAnimationFrame to GSAP's ticker
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000); // GSAP's time is in seconds, lenis wants ms
-    });
-    gsap.ticker.lagSmoothing(0); // Prevent GSAP from messing with delta timing
+    // Keep a stable reference so cleanup actually removes the ticker callback.
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      // Cleanup
-      gsap.ticker.remove((time) => {
-        lenis.raf(time * 1000);
-      });
+      gsap.ticker.remove(tick);
       lenis.destroy();
     };
-  }, []);
+  }, [reducedMotion]);
 
   return <>{children}</>;
 };
