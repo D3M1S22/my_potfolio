@@ -75,9 +75,10 @@ export const SectionPanel = ({
       id={id}
       aria-labelledby={`${id}-title`}
       tabIndex={-1}
-      className="relative min-h-[100svh] flex items-center focus:outline-none"
+      className="relative min-h-[100svh] flex items-end md:items-center pb-[7svh] md:pb-0 focus:outline-none"
       style={{ zIndex: 10, '--accent': accentColor } as React.CSSProperties}
     >
+      {/* Mobile: card sits in the lower half so the 3D region above stays visible */}
       {/* Massive subtle background ambient glow */}
       <div
         aria-hidden="true"
