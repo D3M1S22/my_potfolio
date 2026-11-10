@@ -39,8 +39,12 @@ export const SectionPanel = ({
 
     const ctx = gsap.context(() => {
       // Slide the content panel in from the opposite direction of the cube
-      // Reduced motion: a plain fade, no sliding or scaling
-      const xFrom = reducedMotion ? 0 : direction === 'left' ? 120 : -120;
+      // Reduced motion: a plain fade, no sliding or scaling.
+      // Phones: rise from below instead of sliding in sideways (a sideways
+      // offset would push the card past the screen edge).
+      const wide = window.matchMedia('(min-width: 768px)').matches;
+      const xFrom = reducedMotion || !wide ? 0 : direction === 'left' ? 120 : -120;
+      const yFrom = reducedMotion || wide ? 0 : 40;
       const scaleFrom = reducedMotion ? 1 : 0.9;
       const yTo = reducedMotion ? 0 : -40;
 
@@ -56,8 +60,8 @@ export const SectionPanel = ({
 
       tl.fromTo(
         contentRef.current,
-        { opacity: 0, x: xFrom, scale: scaleFrom },
-        { opacity: 1, x: 0, scale: 1, duration: 30, ease: 'power3.out' }
+        { opacity: 0, x: xFrom, y: yFrom, scale: scaleFrom },
+        { opacity: 1, x: 0, y: 0, scale: 1, duration: 30, ease: 'power3.out' }
       )
         .to({}, { duration: 45 }) // Hold text steady
         .to(contentRef.current, { opacity: 0, y: yTo, duration: 25, ease: 'power2.in' });

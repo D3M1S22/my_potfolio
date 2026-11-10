@@ -149,7 +149,7 @@ export const HeroOverlay = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col pt-24 pb-8"
+      className="fixed inset-0 z-50 flex flex-col pt-24 pb-8 overflow-hidden"
       style={{ pointerEvents: 'none' }}
     >
       {/* Ambient background glow */}

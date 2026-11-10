@@ -32,6 +32,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /*
+   * Nothing may widen the page horizontally: on phones any overflow makes the
+   * browser zoom the whole layout out. `clip` (unlike `hidden`) also works on
+   * iOS Safari and doesn't create a scroll container.
+   */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: var(--color-surface);
