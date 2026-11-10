@@ -5,8 +5,8 @@ import { SECTIONS_DATA } from '@/components/sections/sections-data';
 import type { BrainRegionId } from '@/data/brain-regions';
 import { DEVICE } from '@/lib/device';
 
-/** Low-tier devices get the ~21k-triangle model, everyone else ~45k. */
-export const BRAIN_MODEL_URL = DEVICE.isLowTier ? '/models/brain-low.glb' : '/models/brain.glb';
+/** Phones and low-tier devices get the ~21k-triangle model (170 kB), desktops ~45k (326 kB). */
+export const BRAIN_MODEL_URL = DEVICE.isLowTier || DEVICE.isMobile ? '/models/brain-low.glb' : '/models/brain.glb';
 
 export interface BrainRegionGeometry {
   id: BrainRegionId;
