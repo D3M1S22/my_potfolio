@@ -12,18 +12,17 @@ interface ProjectTileProps {
 }
 
 const ProjectTile = ({ project, onOpen }: ProjectTileProps) => (
-  <li className="snap-start shrink-0 w-[78%] sm:w-auto">
+  <li className="snap-start shrink-0 w-[72%] sm:w-[15.5rem]">
     <button
       type="button"
       onClick={() => onOpen(project.id)}
       aria-haspopup="dialog"
       className="group/tile block w-full text-left rounded-xl overflow-hidden border border-[var(--color-glass-border)]
-                 bg-[var(--color-surface-50)] transition-[transform,border-color,box-shadow] duration-200 ease-out
-                 hover:-translate-y-0.5 hover:border-[color-mix(in_oklab,var(--accent)_55%,transparent)]
-                 hover:shadow-[0_12px_30px_-12px_color-mix(in_oklab,var(--accent)_45%,transparent)]
-                 active:translate-y-0"
+                 bg-[var(--color-surface-50)] transition-[border-color,box-shadow] duration-200 ease-out
+                 hover:border-[color-mix(in_oklab,var(--accent)_55%,transparent)]
+                 hover:shadow-[0_12px_30px_-12px_color-mix(in_oklab,var(--accent)_45%,transparent)]"
     >
-      <div className="aspect-[16/10] overflow-hidden bg-[var(--color-surface-100)]">
+      <div className="aspect-[16/9] overflow-hidden bg-[var(--color-surface-100)]">
         <img
           src={asset(project.image.src)}
           alt=""
@@ -31,25 +30,16 @@ const ProjectTile = ({ project, onOpen }: ProjectTileProps) => (
           height={project.image.height}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover/tile:scale-[1.03]"
+          draggable={false}
+          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover/tile:scale-[1.04]"
         />
       </div>
-      <div className="p-4">
+      <div className="px-3.5 py-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-lg font-semibold text-text leading-tight">{project.title}</h3>
-          <span className="font-mono text-xs text-text-muted shrink-0">{project.year}</span>
+          <h3 className="font-display text-base font-semibold text-text leading-tight truncate">{project.title}</h3>
+          <span className="font-mono text-[11px] text-text-muted shrink-0">{project.year}</span>
         </div>
-        <p className="mt-1.5 text-sm leading-snug text-text-body">{project.summary}</p>
-        <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Technologies">
-          {project.tags.slice(0, 3).map((tag) => (
-            <li
-              key={tag}
-              className="rounded-full px-2.5 py-0.5 font-mono text-[11px] text-text-muted border border-[var(--color-glass-border)]"
-            >
-              {tag}
-            </li>
-          ))}
-        </ul>
+        <p className="mt-1 text-[0.8125rem] leading-snug text-text-body line-clamp-2">{project.summary}</p>
         <span className="sr-only">Open project details</span>
       </div>
     </button>
@@ -196,12 +186,15 @@ const ProjectDialog = ({ project, index, onClose, onStep }: ProjectDialogProps) 
 };
 
 /**
- * Browsable project gallery for the Projects section: a 2×2 grid on larger
- * screens, a swipeable carousel on phones. Each tile opens a detail dialog
- * with previous/next navigation (buttons or ← → keys).
+ * Project gallery for the Projects section: one horizontal row that scrolls
+ * sideways (swipe, trackpad, Shift+wheel or the arrow buttons), so it adds
+ * very little height to the page. Each tile opens a detail dialog with
+ * previous/next navigation (buttons or ← → keys).
  */
 export const ProjectsShowcase = () => {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const trackRef = useRef<HTMLUListElement>(null);
   const index = PROJECTS.findIndex((p) => p.id === openId);
   const project = index >= 0 ? PROJECTS[index] : null;
 
@@ -213,21 +206,88 @@ export const ProjectsShowcase = () => {
     [index],
   );
 
+  // Track whether we're at either end to disable the arrows / fade the edges
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const max = track.scrollWidth - track.clientWidth;
+      const start = track.scrollLeft <= 2;
+      const end = track.scrollLeft >= max - 2;
+      setEdges((e) => (e.start === start && e.end === end ? e : { start, end }));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    track.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      track.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const scrollByTile = (dir: number) => {
+    const track = trackRef.current;
+    const tile = track?.querySelector('li');
+    if (!track || !tile) return;
+    track.scrollBy({ left: dir * (tile.getBoundingClientRect().width + 12), behavior: 'smooth' });
+  };
+
+  const fade = `linear-gradient(to right, ${edges.start ? '#000' : 'transparent'} 0, #000 2.5rem, #000 calc(100% - 2.5rem), ${
+    edges.end ? '#000' : 'transparent'
+  } 100%)`;
+
   return (
-    <>
+    <div className="mt-5 md:mt-7">
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">
+          {PROJECTS.length} projects
+        </p>
+        <div className="hidden sm:flex gap-2">
+          <button
+            type="button"
+            onClick={() => scrollByTile(-1)}
+            disabled={edges.start}
+            aria-label="Scroll projects left"
+            aria-controls="projects-track"
+            className="w-9 h-9 rounded-full border border-[var(--color-glass-border)] text-text transition-[background-color,opacity]
+                       hover:bg-[var(--color-surface-100)] disabled:opacity-30 disabled:cursor-default"
+          >
+            <span aria-hidden="true">←</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollByTile(1)}
+            disabled={edges.end}
+            aria-label="Scroll projects right"
+            aria-controls="projects-track"
+            className="w-9 h-9 rounded-full border border-[var(--color-glass-border)] text-text transition-[background-color,opacity]
+                       hover:bg-[var(--color-surface-100)] disabled:opacity-30 disabled:cursor-default"
+          >
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+
       <ul
+        ref={trackRef}
+        id="projects-track"
         aria-label="Projects"
-        className="mt-7 -mx-7 px-7 md:mx-0 md:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2
-                   sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 [scrollbar-width:none]"
+        className="-mx-5 px-5 md:mx-0 md:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-5 md:scroll-px-0
+                   overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ maskImage: fade, WebkitMaskImage: fade }}
       >
         {PROJECTS.map((p) => (
           <ProjectTile key={p.id} project={p} onOpen={setOpenId} />
         ))}
       </ul>
-      <p className="mt-3 text-xs text-text-muted sm:hidden" aria-hidden="true">
-        Swipe to see more →
-      </p>
+
       <ProjectDialog project={project} index={index} onClose={() => setOpenId(null)} onStep={step} />
-    </>
+    </div>
   );
 };

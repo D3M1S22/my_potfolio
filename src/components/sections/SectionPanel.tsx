@@ -1,4 +1,4 @@
-import { useRef, useEffect, type ReactNode } from 'react';
+import { useRef, useEffect, useState, type ReactNode } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
@@ -76,6 +76,9 @@ export const SectionPanel = ({
 
   const isRight = direction === 'right';
   const brainRegion = BRAIN_REGIONS[region];
+  // Phones: long descriptions start clamped so the card leaves room for the brain
+  const [expanded, setExpanded] = useState(false);
+  const clampable = description.length > 150;
 
   return (
     <section
@@ -101,8 +104,8 @@ export const SectionPanel = ({
           isRight ? 'md:ml-auto md:mr-[8%] lg:mr-[10%]' : 'md:mr-auto md:ml-[8%] lg:ml-[10%]'
         }`}
       >
-        {/* Card */}
-        <div className="panel rounded-2xl p-7 md:p-10 relative overflow-hidden group">
+        {/* Card — compact on phones so the brain above stays in view longer */}
+        <div className="panel rounded-2xl p-5 md:p-10 relative overflow-hidden group">
           {/* Accent glow */}
           <div
             aria-hidden="true"
@@ -110,46 +113,64 @@ export const SectionPanel = ({
             style={{ background: `radial-gradient(circle, ${accentColor}, transparent 65%)` }}
           />
 
-          {/* Icon */}
-          <div className="text-3xl md:text-4xl mb-4" aria-hidden="true">{icon}</div>
-
-          {/* Brain region this section lives in */}
-          <p className="text-accent-readable font-mono text-[0.8125rem] font-semibold uppercase tracking-[0.14em] mb-1">
-            {brainRegion.name}
+          {/* Icon + brain region this section lives in */}
+          <div className="flex items-center gap-3 md:block">
+            <div className="text-2xl md:text-4xl md:mb-4" aria-hidden="true">{icon}</div>
+            <p className="text-accent-readable font-mono text-xs md:text-[0.8125rem] font-semibold uppercase tracking-[0.14em] md:mb-1">
+              {brainRegion.name}
+            </p>
+          </div>
+          <p className="text-text-muted text-[0.8125rem] md:text-sm leading-snug mt-1 md:mt-0 mb-4 md:mb-6">
+            {brainRegion.role}
           </p>
-          <p className="text-text-muted text-sm leading-snug mb-6">{brainRegion.role}</p>
 
           {/* Title */}
           <h2
             id={`${id}-title`}
-            className="text-accent-readable font-display text-[2rem] leading-tight md:text-5xl font-bold mb-2"
+            className="text-accent-readable font-display text-[1.75rem] leading-tight md:text-5xl font-bold mb-1 md:mb-2"
           >
             {title}
           </h2>
 
           {/* Subtitle */}
-          <p className="text-sm md:text-[0.9375rem] font-medium uppercase tracking-[0.12em] text-text-muted font-mono mb-6">
+          <p className="text-xs md:text-[0.9375rem] font-medium uppercase tracking-[0.12em] text-text-muted font-mono mb-4 md:mb-6">
             {subtitle}
           </p>
 
-          {/* Divider */}
+          {/* Divider (desktop only — saves height on phones) */}
           <div
             aria-hidden="true"
-            className="w-12 h-0.5 rounded-full mb-6"
+            className="hidden md:block w-12 h-0.5 rounded-full mb-6"
             style={{ backgroundColor: accentColor }}
           />
 
           {/* Description */}
-          <p className="text-[1.0625rem] md:text-lg leading-[1.75] text-text-body">
+          <p
+            id={`${id}-description`}
+            className={`text-base md:text-lg leading-[1.65] md:leading-[1.75] text-text-body ${
+              clampable && !expanded ? 'line-clamp-4 md:line-clamp-none' : ''
+            }`}
+          >
             {description}
           </p>
+          {clampable && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-controls={`${id}-description`}
+              className="md:hidden mt-2 -ml-1 px-1 py-1.5 text-sm font-medium text-accent-readable"
+            >
+              {expanded ? 'Show less' : 'Read more'}
+            </button>
+          )}
 
           {children}
 
           {/* Section number */}
           <div
             aria-hidden="true"
-            className="absolute bottom-4 right-6 text-7xl font-display font-bold opacity-5"
+            className="hidden md:block absolute bottom-4 right-6 text-7xl font-display font-bold opacity-5"
             style={{ color: accentColor }}
           >
             {String(index + 1).padStart(2, '0')}
