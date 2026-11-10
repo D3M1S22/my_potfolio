@@ -8,6 +8,7 @@ import { useBrainRegions } from './useBrainRegions';
 import { SECTIONS_DATA } from '@/components/sections/sections-data';
 import { BRAIN_REGIONS, type BrainRegionId } from '@/data/brain-regions';
 import { prefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { DEVICE } from '@/lib/device';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -269,8 +270,10 @@ const Brain = ({ labelRef }: BrainProps) => {
             geometry={r.geometry}
             material={materials[i]}
             position={r.home}
-            onPointerOver={onOver(i)}
-            onPointerOut={onOut(i)}
+            // Touch devices: tap only. Hover handlers would make R3F hit-test the
+            // whole mesh on every pointer move, including scroll gestures.
+            onPointerOver={DEVICE.isMobile ? undefined : onOver(i)}
+            onPointerOut={DEVICE.isMobile ? undefined : onOut(i)}
             onClick={onClick(i)}
           />
         ))}
