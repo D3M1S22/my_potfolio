@@ -1,13 +1,11 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const HeroOverlay = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { isLowTier } = useDevicePerformance();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -157,7 +155,11 @@ export const HeroOverlay = () => {
       {/* Ambient background glow */}
       <div
         aria-hidden="true"
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60svh] rounded-full opacity-[0.015] dark:opacity-[0.025] pointer-events-none bg-gradient-to-tr from-accent via-cyan to-magenta ${isLowTier ? '' : 'blur-[120px]'}`}
+        className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.08]"
+        style={{
+          background:
+            'radial-gradient(ellipse 35% 30% at 42% 48%, var(--color-accent), transparent 70%), radial-gradient(ellipse 30% 28% at 58% 54%, var(--color-magenta), transparent 70%)',
+        }}
       />
 
       {/* Spacer to push content to middle safely */}
@@ -191,7 +193,7 @@ export const HeroOverlay = () => {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
                {/* Glass Background */}
-               <div className={`hero-glass-bg absolute inset-0 glass-subtle rounded-3xl border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none ${isLowTier ? '' : 'backdrop-blur-md'}`}></div>
+               <div className={`hero-glass-bg absolute inset-0 glass-subtle rounded-3xl border border-white/5 dark:border-white/5 shadow-2xl pointer-events-none`}></div>
 
                {/* True DOM is a ROW, positioned absolute center */}
                <div className="hero-name-row absolute flex flex-row items-center justify-center gap-2 sm:gap-4">

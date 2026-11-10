@@ -18,6 +18,7 @@ export const THEME_COLORS = {
     '--color-glass-border': 'hsla(0, 0%, 0%, 0.08)',
     '--color-glass-subtle-bg': 'hsla(0, 0%, 100%, 0.4)',
     '--color-glass-subtle-border': 'hsla(0, 0%, 0%, 0.05)',
+    '--color-glass-solid-bg': 'hsla(0, 0%, 100%, 0.9)',
   },
   dark: {
     // Grayscale Backgrounds
@@ -36,5 +37,6 @@ export const THEME_COLORS = {
     '--color-glass-border': 'hsla(0, 0%, 100%, 0.1)',
     '--color-glass-subtle-bg': 'hsla(0, 0%, 10%, 0.35)',
     '--color-glass-subtle-border': 'hsla(0, 0%, 100%, 0.05)',
+    '--color-glass-solid-bg': 'hsla(0, 0%, 9%, 0.9)',
   }
 };

@@ -1,4 +1,4 @@
-import { ExplodingCube } from '@/components/three/ExplodingCube';
+import { lazy, Suspense } from 'react';
 import { HeroOverlay } from '@/components/sections/HeroOverlay';
 import { SectionPanel } from '@/components/sections/SectionPanel';
 import { SECTIONS_DATA } from '@/components/sections/sections-data';
@@ -6,6 +6,11 @@ import { ScrollProgress } from '@/components/ui/ScrollProgress';
 import { Navbar } from '@/components/ui/Navbar';
 import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { SITE } from '@/config/site';
+
+// three.js + R3F are ~800 kB: load them in their own chunk so text paints first
+const Scene3D = lazy(() =>
+  import('@/components/three/ExplodingCube').then((m) => ({ default: m.ExplodingCube })),
+);
 
 export const LandingPage = () => {
   return (
@@ -19,7 +24,9 @@ export const LandingPage = () => {
       <Navbar />
 
       {/* 3D scene — fixed, transparent canvas behind all content */}
-      <ExplodingCube />
+      <Suspense fallback={null}>
+        <Scene3D />
+      </Suspense>
 
       <main id="top" className="relative z-[1]">
         {/* Hero text overlay — fixed, fades on scroll; holds the page <h1> */}
@@ -43,6 +50,7 @@ export const LandingPage = () => {
             icon={section.icon}
             accentColor={section.accentColor}
             direction={section.direction}
+            region={section.region}
           />
         ))}
       </main>

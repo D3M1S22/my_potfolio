@@ -1,8 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { BRAIN_REGIONS, type BrainRegionId } from '@/data/brain-regions';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,6 +16,7 @@ interface SectionPanelProps {
   icon: string;
   accentColor: string;
   direction: 'left' | 'right';
+  region: BrainRegionId;
 }
 
 export const SectionPanel = ({
@@ -27,10 +28,10 @@ export const SectionPanel = ({
   icon,
   accentColor,
   direction,
+  region,
 }: SectionPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { isLowTier } = useDevicePerformance();
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export const SectionPanel = ({
   }, [direction, reducedMotion]);
 
   const isRight = direction === 'right';
+  const brainRegion = BRAIN_REGIONS[region];
 
   return (
     <section
@@ -74,13 +76,13 @@ export const SectionPanel = ({
       aria-labelledby={`${id}-title`}
       tabIndex={-1}
       className="relative min-h-[100svh] flex items-center focus:outline-none"
-      style={{ zIndex: 10 }}
+      style={{ zIndex: 10, '--accent': accentColor } as React.CSSProperties}
     >
       {/* Massive subtle background ambient glow */}
       <div
         aria-hidden="true"
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vh] rounded-full opacity-[0.03] dark:opacity-[0.05] pointer-events-none ${isLowTier ? '' : 'blur-[100px]'}`}
-        style={{ backgroundColor: accentColor }}
+        className="absolute inset-0 pointer-events-none opacity-[0.06] dark:opacity-[0.09]"
+        style={{ background: `radial-gradient(ellipse 45% 40% at 50% 50%, ${accentColor}, transparent 70%)` }}
       />
       
       <div
@@ -94,18 +96,23 @@ export const SectionPanel = ({
           {/* Accent glow */}
           <div
             aria-hidden="true"
-            className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 transition-opacity duration-500 group-hover:opacity-40 ${isLowTier ? '' : 'blur-3xl'}`}
-            style={{ backgroundColor: accentColor }}
+            className="absolute -top-24 -right-24 w-56 h-56 rounded-full opacity-25 transition-opacity duration-500 group-hover:opacity-45"
+            style={{ background: `radial-gradient(circle, ${accentColor}, transparent 65%)` }}
           />
 
           {/* Icon */}
           <div className="text-4xl mb-4" aria-hidden="true">{icon}</div>
 
+          {/* Brain region this section lives in */}
+          <p className="text-accent-readable font-mono text-xs uppercase tracking-[0.2em] mb-1">
+            {brainRegion.name}
+          </p>
+          <p className="text-text-faint text-xs mb-5">{brainRegion.role}</p>
+
           {/* Title */}
           <h2
             id={`${id}-title`}
-            className="font-display text-3xl md:text-4xl font-bold mb-2"
-            style={{ color: accentColor }}
+            className="text-accent-readable font-display text-3xl md:text-4xl font-bold mb-2"
           >
             {title}
           </h2>

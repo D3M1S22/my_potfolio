@@ -3,11 +3,17 @@ import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { DEVICE } from '@/lib/device';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Fix iOS Safari address bar layout thrashing and scroll stuttering
-ScrollTrigger.normalizeScroll(true);
+// Mobile browser toolbars resize the viewport while scrolling; don't recalculate
+// every trigger when that happens (layout uses svh units, which don't change).
+ScrollTrigger.config({ ignoreMobileResize: true });
+
+// iOS Safari needs JS-normalised scrolling to stop address-bar layout jumps.
+// Elsewhere native touch scrolling is smoother, so leave it alone.
+if (DEVICE.isIOS) ScrollTrigger.normalizeScroll(true);
 
 interface SmoothScrollProps {
   children: ReactNode;

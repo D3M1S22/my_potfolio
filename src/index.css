@@ -118,6 +118,28 @@
     border: 1px solid var(--color-glass-subtle-border);
   }
 
+  /*
+   * Touch devices: a backdrop blur over an animating WebGL canvas forces the
+   * GPU to re-blur the whole region every frame — the main cause of scroll lag
+   * on phones. Use an almost-opaque surface instead.
+   */
+  @media (pointer: coarse) {
+    .glass,
+    .glass-subtle {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: var(--color-glass-solid-bg);
+    }
+  }
+
+  /* Accent text that stays readable (WCAG AA) on light surfaces */
+  .text-accent-readable {
+    color: color-mix(in oklab, var(--accent) 58%, black);
+  }
+  .dark .text-accent-readable {
+    color: var(--accent);
+  }
+
   .glow-accent {
     box-shadow:
       0 0 20px hsla(250, 90%, 65%, 0.15),
