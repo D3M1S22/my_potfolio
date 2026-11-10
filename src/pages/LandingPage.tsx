@@ -8,9 +8,7 @@ import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { SITE } from '@/config/site';
 
 // three.js + R3F are ~800 kB: load them in their own chunk so text paints first
-const Scene3D = lazy(() =>
-  import('@/components/three/ExplodingCube').then((m) => ({ default: m.ExplodingCube })),
-);
+const Scene3D = lazy(() => import('@/components/three/BrainScene'));
 
 export const LandingPage = () => {
   return (

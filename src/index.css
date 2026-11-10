@@ -150,6 +150,13 @@
     color: var(--accent);
   }
 
+  /* Label pinned to a brain region in the 3D scene */
+  .region-label {
+    background: var(--color-glass-solid-bg);
+    border: 1px solid color-mix(in oklab, var(--accent) 55%, transparent);
+    box-shadow: 0 0 24px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+
   .glow-accent {
     box-shadow:
       0 0 20px hsla(250, 90%, 65%, 0.15),
