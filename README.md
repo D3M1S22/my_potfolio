@@ -42,6 +42,27 @@ Copy `.env.example` to `.env` and set `VITE_SITE_URL` to the deployed origin
 `og:url`, absolute social-image URLs, `sitemap.xml` and a `Sitemap:` line in
 `robots.txt`. Without it the site still builds; those URL-dependent tags are omitted.
 
+## 🌍 Deployment (Cloudflare Pages, free)
+
+The site is fully static (`dist/`), so any static host works. Cloudflare Pages
+is free with unlimited bandwidth, a custom domain and HTTPS.
+
+1. Cloudflare dashboard → **Workers & Pages → Create → Pages → Connect to Git**,
+   pick this repo and the `main` branch.
+2. Build settings:
+   - Framework preset: **None**
+   - Build command: `bun install --frozen-lockfile && bun run build`
+   - Build output directory: `dist`
+3. Environment variables (Production):
+   - `SKIP_DEPENDENCY_INSTALL` = `true` (Bun installs dependencies in the build command)
+   - `BUN_VERSION` = `1.4.4`
+   - `VITE_SITE_URL` = `https://your-domain` (enables canonical URL + sitemap)
+4. **Custom domains → Set up a domain**. A root domain (`example.com`) needs the
+   domain's DNS on Cloudflare (free); a subdomain can be a CNAME at any registrar.
+
+Every push to `main` deploys automatically; other branches get preview URLs.
+Caching and security headers come from `public/_headers`.
+
 ## 📖 Development Guidelines
 
 AI-assistant rules, skills and workflows live in `.cursor/` (Cursor) and
