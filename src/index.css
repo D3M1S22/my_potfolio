@@ -121,6 +121,20 @@
     border: 1px solid var(--color-glass-border);
   }
 
+  /* Reading surface for section cards: near-opaque so text never sits on
+     a busy, moving background; a light blur only where it's cheap */
+  .panel {
+    background: var(--color-panel-bg);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.45);
+  }
+  @media (pointer: fine) {
+    .panel {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+  }
+
   .glass-subtle {
     background: var(--color-glass-subtle-bg);
     backdrop-filter: blur(8px);

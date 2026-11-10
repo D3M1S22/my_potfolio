@@ -11,6 +11,7 @@ export const THEME_COLORS = {
     // Text
     '--color-text': 'hsl(0, 0%, 12%)',
     '--color-text-muted': 'hsl(0, 0%, 36%)', // 6.9:1
+    '--color-text-body': 'hsl(0, 0%, 18%)', // 14:1 — long-form reading text
     '--color-text-faint': 'hsl(0, 0%, 42%)', // 4.9:1 on surface (WCAG AA)
     
     // Glass & Overlays
@@ -19,6 +20,7 @@ export const THEME_COLORS = {
     '--color-glass-subtle-bg': 'hsla(0, 0%, 100%, 0.4)',
     '--color-glass-subtle-border': 'hsla(0, 0%, 0%, 0.05)',
     '--color-glass-solid-bg': 'hsla(0, 0%, 100%, 0.9)',
+    '--color-panel-bg': 'hsla(0, 0%, 100%, 0.92)',
   },
   dark: {
     // Grayscale Backgrounds
@@ -29,7 +31,8 @@ export const THEME_COLORS = {
     
     // Text
     '--color-text': 'hsl(0, 0%, 95%)',
-    '--color-text-muted': 'hsl(0, 0%, 60%)',
+    '--color-text-muted': 'hsl(0, 0%, 66%)',
+    '--color-text-body': 'hsl(0, 0%, 86%)', // 14:1 — long-form reading text
     '--color-text-faint': 'hsl(0, 0%, 54%)', // 5.6:1 on surface (WCAG AA)
     
     // Glass & Overlays
@@ -38,5 +41,6 @@ export const THEME_COLORS = {
     '--color-glass-subtle-bg': 'hsla(0, 0%, 10%, 0.35)',
     '--color-glass-subtle-border': 'hsla(0, 0%, 100%, 0.05)',
     '--color-glass-solid-bg': 'hsla(0, 0%, 9%, 0.9)',
+    '--color-panel-bg': 'hsla(0, 0%, 8%, 0.9)',
   }
 };

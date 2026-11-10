@@ -345,8 +345,8 @@ const RegionLabel = ({ labelRef }: BrainProps) => (
   >
     <div className="flex flex-col items-center -translate-x-1/2 -translate-y-full">
       <div className="region-label text-accent-readable rounded-xl px-3 py-1.5 text-center">
-        <p data-label-name className="font-mono text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.18em]" />
-        <p data-label-section className="text-[10px] md:text-xs text-text-muted" />
+        <p data-label-name className="font-mono text-[11px] md:text-xs font-semibold uppercase tracking-[0.14em]" />
+        <p data-label-section className="text-[11px] md:text-[13px] text-text-body" />
       </div>
       <span className="w-px h-5 md:h-16" style={{ background: 'var(--accent)' }} />
       <span className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)', boxShadow: '0 0 12px var(--accent)' }} />

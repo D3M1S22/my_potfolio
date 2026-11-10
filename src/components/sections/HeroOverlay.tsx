@@ -185,7 +185,7 @@ export const HeroOverlay = () => {
           
           {/* Greeting Wrapper */}
           <div className="hero-top-text opacity-0 mb-4">
-            <p aria-hidden="true" className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-faint font-mono">
+            <p aria-hidden="true" className="hero-greeting text-sm md:text-base uppercase tracking-[0.3em] text-text-muted font-mono [text-shadow:0_0_16px_var(--color-surface)]">
               Hello, I&apos;m
             </p>
           </div>
@@ -229,7 +229,7 @@ export const HeroOverlay = () => {
           {/* Bottom Text Wrapper guarantees internal layout won't overlap when animated */}
           <div className="hero-bottom-text opacity-0 flex flex-col items-center">
             {/* Title */}
-            <p className="hero-title text-lg md:text-xl text-text-muted font-light mb-8">
+            <p className="hero-title text-lg md:text-2xl text-text font-normal mb-8 [text-shadow:0_0_18px_var(--color-surface),0_0_6px_var(--color-surface)]">
               Developer &amp; Creative Technologist
             </p>
 

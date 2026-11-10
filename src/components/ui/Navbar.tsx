@@ -74,7 +74,7 @@ export const Navbar = () => {
                   e.preventDefault();
                   handleNavClick(item.href);
                 }}
-                className="text-sm text-text-faint hover:text-text transition-colors duration-200
+                className="text-[0.8125rem] font-medium text-text-muted hover:text-text transition-colors duration-200
                            uppercase tracking-wider font-mono"
               >
                 {item.label}

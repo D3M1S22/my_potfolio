@@ -35,6 +35,7 @@ export default {
         text: {
           DEFAULT: 'var(--color-text)',
           muted: 'var(--color-text-muted)',
+          body: 'var(--color-text-body)',
           faint: 'var(--color-text-faint)',
         },
       },
