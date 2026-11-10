@@ -24,25 +24,26 @@ A cutting-edge, highly interactive web portfolio project focusing on phenomenal 
 
 ### Prerequisites
 
-Make sure you have [Bun](https://bun.sh/) installed on your machine for the fastest dependency resolution and script execution.
+[Bun](https://bun.sh/) (or run `direnv allow` / `nix develop` to get Node 22 + Bun from the flake).
 
-### Installation
+### Commands
 
-1. Clone the repository and install dependencies:
-   ```bash
-   bun install
-   ```
+```bash
+bun install        # install dependencies
+bun run dev        # dev server on http://localhost:5173
+bun run build      # type-check + production build into dist/
+bun run preview    # serve the production build locally
+```
 
-2. Start the development server:
-   ```bash
-   bun start
-   ```
+### Environment
 
-3. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Copy `.env.example` to `.env` and set `VITE_SITE_URL` to the deployed origin
+(e.g. `https://example.dev`). When set, the build adds the canonical URL,
+`og:url`, absolute social-image URLs, `sitemap.xml` and a `Sitemap:` line in
+`robots.txt`. Without it the site still builds; those URL-dependent tags are omitted.
 
 ## 📖 Development Guidelines
 
-This project uses an automated AI-assisted setup geared around `Cursor IDE`. Detailed development philosophies concerning 3D implementations, aesthetic standards, UI decisions, SEO best practices, and GitHub workflows are outlined in `.cursorrules`.
-
-- **To deploy**: Run `bun run build`.
-- **Testing**: Run `bun test` to launch the test runner.
+AI-assistant rules, skills and workflows live in `.cursor/` (Cursor) and
+`.agents/` (Antigravity): coding standards, UI/UX and animation conventions,
+SEO/accessibility requirements and the Conventional Commits git workflow.
