@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, type ReactNode } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
@@ -17,6 +17,8 @@ interface SectionPanelProps {
   accentColor: string;
   direction: 'left' | 'right';
   region: BrainRegionId;
+  /** Extra content under the description (e.g. the projects gallery) */
+  children?: ReactNode;
 }
 
 export const SectionPanel = ({
@@ -29,6 +31,7 @@ export const SectionPanel = ({
   accentColor,
   direction,
   region,
+  children,
 }: SectionPanelProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -140,6 +143,8 @@ export const SectionPanel = ({
           <p className="text-[1.0625rem] md:text-lg leading-[1.75] text-text-body">
             {description}
           </p>
+
+          {children}
 
           {/* Section number */}
           <div

@@ -40,7 +40,7 @@ export const SECTIONS_DATA: SectionData[] = [
     title: 'Projects',
     subtitle: 'What I\'ve Built',
     description:
-      'From interactive portfolios with 3D elements to full-scale SaaS platforms, every project is an opportunity to push boundaries. I focus on clean architecture, pixel-perfect UI, and delightful user experiences that leave a lasting impression.',
+      'A few things I have designed and built. Open one to see the story behind it.',
     icon: '🚀',
     accentColor: '#f472b6',
     direction: 'left',

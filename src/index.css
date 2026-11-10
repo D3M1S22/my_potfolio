@@ -183,3 +183,26 @@
       0 0 60px hsla(185, 85%, 55%, 0.05);
   }
 }
+/* ─── Project detail dialog ─── */
+/* The global reset removes margins; native modal centring relies on margin: auto */
+.project-dialog {
+  margin: auto;
+}
+.project-dialog::backdrop {
+  background: hsla(0, 0%, 0%, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.project-dialog[open] {
+  animation: dialog-in 220ms ease-out;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

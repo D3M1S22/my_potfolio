@@ -6,6 +6,7 @@ import { ScrollProgress } from '@/components/ui/ScrollProgress';
 import { Navbar } from '@/components/ui/Navbar';
 import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { SITE } from '@/config/site';
+import { ProjectsShowcase } from '@/components/sections/ProjectsShowcase';
 
 // three.js + R3F are ~800 kB: load them in their own chunk so text paints first
 const Scene3D = lazy(() => import('@/components/three/BrainScene'));
@@ -53,7 +54,9 @@ export const LandingPage = () => {
             accentColor={section.accentColor}
             direction={section.direction}
             region={section.region}
-          />
+          >
+            {section.id === 'projects' && <ProjectsShowcase />}
+          </SectionPanel>
         ))}
       </main>
 
