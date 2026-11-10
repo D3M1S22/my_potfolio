@@ -21,7 +21,11 @@ export const LandingPage = () => {
       {/* 3D scene — fixed, transparent canvas behind all content */}
       <ExplodingCube />
 
-      <main id="top" className="relative z-[1]">
+      {/*
+        No z-index on <main>: it would create a stacking context and trap the
+        hero name (z-50) below the navbar (z-40) while it docks into the logo.
+      */}
+      <main id="top">
         {/* Hero text overlay — fixed, fades on scroll; holds the page <h1> */}
         <HeroOverlay />
 
