@@ -92,6 +92,7 @@ export const SectionPanel = ({
       
       <div
         ref={contentRef}
+        data-section-card
         className={`w-full max-w-xl mx-auto px-6 md:px-0 ${
           isRight ? 'md:ml-auto md:mr-[12%]' : 'md:mr-auto md:ml-[12%]'
         }`}
