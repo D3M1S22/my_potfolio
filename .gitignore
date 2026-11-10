@@ -31,3 +31,4 @@ result
 .vscode
 *.swp
 *.swo
+*.tsbuildinfo
