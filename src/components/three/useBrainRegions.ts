@@ -14,6 +14,8 @@ export interface BrainRegionGeometry {
   id: BrainRegionId;
   /** Geometry re-centred on the region's own centre (rotates/scales in place) */
   geometry: THREE.BufferGeometry;
+  /** Cut surfaces closing the region's open edges (same local frame) */
+  capGeometry: THREE.BufferGeometry | null;
   /** Where the region sits inside the assembled brain (brain space) */
   home: THREE.Vector3;
   /** Bounding-sphere radius of the region */
@@ -31,6 +33,16 @@ const toFloat = (attr: THREE.BufferAttribute | THREE.InterleavedBufferAttribute)
   return new THREE.Float32BufferAttribute(out, attr.itemSize);
 };
 
+/** Float copy of a mesh's geometry with its node transform baked in. */
+const bakeGeometry = (mesh: THREE.Mesh) => {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', toFloat(mesh.geometry.getAttribute('position')));
+  geometry.setAttribute('normal', toFloat(mesh.geometry.getAttribute('normal')));
+  geometry.setIndex(mesh.geometry.getIndex());
+  geometry.applyMatrix4(mesh.matrixWorld);
+  return geometry;
+};
+
 /**
  * Loads the segmented brain and returns one centred geometry per region,
  * in section order (index i ↔ SECTIONS_DATA[i]).
@@ -45,19 +57,18 @@ export const useBrainRegions = (): BrainRegionGeometry[] => {
       if (!(mesh instanceof THREE.Mesh)) throw new Error(`Brain model has no "${region}" mesh`);
 
       // Bake the node transform (quantisation scale/offset) into float geometry
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', toFloat(mesh.geometry.getAttribute('position')));
-      geometry.setAttribute('normal', toFloat(mesh.geometry.getAttribute('normal')));
-      geometry.setIndex(mesh.geometry.getIndex());
-      geometry.applyMatrix4(mesh.matrixWorld);
+      const geometry = bakeGeometry(mesh);
+      const cap = scene.getObjectByName(`${region}-cut`);
+      const capGeometry = cap instanceof THREE.Mesh ? bakeGeometry(cap) : null;
 
       geometry.computeBoundingSphere();
       const sphere = geometry.boundingSphere ?? new THREE.Sphere();
       const home = sphere.center.clone();
       geometry.translate(-home.x, -home.y, -home.z);
       geometry.computeBoundingSphere();
+      capGeometry?.translate(-home.x, -home.y, -home.z);
 
-      return { id: region, geometry, home, radius: geometry.boundingSphere?.radius ?? 0.1 };
+      return { id: region, geometry, capGeometry, home, radius: geometry.boundingSphere?.radius ?? 0.1 };
     });
   }, [scene]);
 };
