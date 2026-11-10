@@ -21,6 +21,11 @@
  *   wernicke    posterior superior temporal gyrus, left hemisphere
  *   corpus      corpus callosum
  *
+ * The source lobes are open surfaces (the medial walls and the lines where we
+ * carve one lobe into several regions are holes). Every hole is closed with a
+ * "cut surface" stored as a sibling node `<region>-cut`, so each region reads
+ * as a solid piece of tissue, including where it lifts out of the brain.
+ *
  * Coordinate frame of the output: centred at the origin, longest axis = 2 units,
  * +X = front (nose), +Y = up, -Z = left hemisphere.
  */
@@ -188,12 +193,78 @@ const smoothNormals = (doc) => {
     }
 };
 
-// ── 5. Simplify, quantise, compress, write ──────────────────────────────────
+/**
+ * Closes every boundary loop of each region with a fan-triangulated cap,
+ * written as a separate `<region>-cut` node using the `cut` material.
+ * Runs after simplification (borders are locked, so caps match exactly).
+ */
+const capHoles = (doc) => {
+  const buffer = doc.getRoot().listBuffers()[0];
+  const cutMaterial = doc.createMaterial('cut').setRoughnessFactor(0.8).setMetallicFactor(0).setDoubleSided(true);
+  const root = doc.getRoot().listScenes()[0].listChildren()[0];
+  for (const node of [...root.listChildren()]) {
+    const prim = node.getMesh().listPrimitives()[0];
+    const P = prim.getAttribute('POSITION').getArray();
+    const I = prim.getIndices().getArray();
+
+    // Directed edges; a boundary edge a→b has no twin b→a
+    const directed = new Set();
+    for (let t = 0; t < I.length; t += 3)
+      for (const [a, b] of [[I[t], I[t + 1]], [I[t + 1], I[t + 2]], [I[t + 2], I[t]]]) directed.add(`${a},${b}`);
+    const next = new Map(); // a → [b, ...] along boundary edges
+    for (const key of directed) {
+      const [a, b] = key.split(',').map(Number);
+      if (!directed.has(`${b},${a}`)) {
+        if (!next.has(a)) next.set(a, []);
+        next.get(a).push(b);
+      }
+    }
+
+    // Walk boundary loops
+    const loops = [];
+    for (const start of next.keys()) {
+      while (next.get(start)?.length) {
+        const loop = [start];
+        let cur = next.get(start).pop();
+        while (cur !== start && cur !== undefined && loop.length < 100000) {
+          loop.push(cur);
+          const outs = next.get(cur);
+          cur = outs?.length ? outs.pop() : undefined;
+        }
+        if (cur === start && loop.length >= 3) loops.push(loop);
+      }
+    }
+    if (!loops.length) continue;
+
+    // Fan-triangulate each loop around its centroid (reverse winding → faces outward)
+    const pos = [];
+    const ind = [];
+    for (const loop of loops) {
+      const base = pos.length / 3;
+      const c = [0, 0, 0];
+      for (const v of loop) for (let k = 0; k < 3; k++) c[k] += P[v * 3 + k] / loop.length;
+      for (const v of loop) pos.push(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]);
+      pos.push(c[0], c[1], c[2]);
+      const centre = base + loop.length;
+      for (let i = 0; i < loop.length; i++) ind.push(base + ((i + 1) % loop.length), base + i, centre);
+    }
+    const capPrim = doc
+      .createPrimitive()
+      .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(pos)).setBuffer(buffer))
+      .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(ind)).setBuffer(buffer))
+      .setMaterial(cutMaterial);
+    const name = `${node.getName()}-cut`;
+    root.addChild(doc.createNode(name).setMesh(doc.createMesh(name).addPrimitive(capPrim)));
+  }
+};
+
+// ── 5. Simplify, cap, quantise, compress, write ─────────────────────────────
 for (const { file, ratio } of OUTPUTS) {
   const doc = buildDocument();
   await doc.transform(
     weld(),
     simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.002, lockBorder: true }),
+    capHoles,
     smoothNormals,
     prune(),
     dedup(),
