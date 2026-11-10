@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'Inter', 'sans-serif'],
-        mono: ['Roboto Mono', 'monospace'],
+        sans: ['"Inter Variable"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Outfit Variable"', 'Outfit', '"Inter Variable"', 'sans-serif'],
+        mono: ['"Roboto Mono Variable"', '"Roboto Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
         surface: {
