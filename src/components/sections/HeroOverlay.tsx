@@ -141,6 +141,21 @@ export const HeroOverlay = () => {
           immediateRender: false
         }, 0
       );
+
+      // The intro and the scroll timeline animate the same elements. If the
+      // user scrolls before the intro ends (or the page loads already
+      // scrolled, e.g. reload or a #section link), jump the intro to its end
+      // and let the scroll timeline re-apply its state on top — otherwise the
+      // intro would leave the greeting / scroll hint stuck on screen.
+      const finishIntro = () => {
+        if (tl.progress() < 1) {
+          tl.progress(1);
+          nameScrollTl.render(nameScrollTl.totalTime(), false, true);
+        }
+      };
+      if (window.scrollY > 4) finishIntro();
+      window.addEventListener('scroll', finishIntro, { once: true, passive: true });
+      return () => window.removeEventListener('scroll', finishIntro);
     }, containerRef);
 
     return () => ctx.revert();
