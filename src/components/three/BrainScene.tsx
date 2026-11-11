@@ -43,6 +43,15 @@ const facing = ([x, y, z]: [number, number, number]) => {
 const REGION_QUATS = SECTIONS_DATA.map((s) => facing(VIEW_DIR[s.region]));
 const HERO_QUAT = facing(HERO_VIEW);
 
+/** How far (in viewport heights) the first/last card travels while the brain
+ *  moves between the hero/footer and that card. */
+const EDGE_TRAVEL = 0.6;
+/** Fraction of the scroll between two cards (at each end) where the brain
+ *  holds the current card's pose, so it's steady while you read. */
+const HOLD = 0.15;
+
+const smoothstep = (x: number) => x * x * (3 - 2 * x);
+
 /** Frame-rate independent exponential smoothing factor. */
 const damp = (lambda: number, dt: number) => 1 - Math.exp(-lambda * dt);
 
@@ -116,12 +125,8 @@ const Brain = ({ labelRef }: BrainProps) => {
     [regions],
   );
 
-  const state = useRef<RegionState[]>(SECTIONS_DATA.map(() => ({ opacity: 1, emissive: 0.08, lift: 0 })));
-
-  // Section cards, in section order (the brain follows the one in view)
+  // Section cards, in section order (the brain's motion is derived from them)
   const cardsRef = useRef<HTMLElement[]>([]);
-  const lastActiveRef = useRef(HERO);
-  const switchTimeRef = useRef(0);
   useEffect(() => {
     cardsRef.current = SECTIONS_DATA.map((sd) =>
       document.querySelector<HTMLElement>(`#${sd.id} [data-section-card]`),
@@ -129,156 +134,158 @@ const Brain = ({ labelRef }: BrainProps) => {
     invalidate();
   }, [invalidate]);
 
-  const tmpQuat = useMemo(() => new THREE.Quaternion(), []);
-  const spinQuat = useMemo(() => new THREE.Quaternion(), []);
+  const hoverRef = useRef(SECTIONS_DATA.map(() => 0));
+  const quatA = useMemo(() => new THREE.Quaternion(), []);
+  const quatB = useMemo(() => new THREE.Quaternion(), []);
   const tmpVec = useMemo(() => new THREE.Vector3(), []);
   const yAxis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const visA = useMemo<RegionState[]>(() => SECTIONS_DATA.map(() => ({ opacity: 1, emissive: 0, lift: 0 })), []);
+  const visB = useMemo<RegionState[]>(() => SECTIONS_DATA.map(() => ({ opacity: 1, emissive: 0, lift: 0 })), []);
 
   useFrame((_, rawDelta) => {
     const placement = placementRef.current;
     const orient = orientRef.current;
-    if (!placement || !orient) return;
+    const cards = cardsRef.current;
+    if (!placement || !orient || !cards.length) return;
     const dt = Math.min(rawDelta, 0.1);
+    const N = cards.length;
+    const vh = size.height;
     let moving = false;
 
-    // ── Which section is in view? The card closest to the screen's middle ──
-    const vh = size.height;
-    const cards = cardsRef.current;
-    let active = HERO;
-    let cardRect: DOMRect | null = null;
-    if (cards.length) {
-      const first = cards[0].getBoundingClientRect();
-      const last = cards[cards.length - 1].getBoundingClientRect();
-      if (first.top + first.height / 2 > vh * 0.92) active = HERO;
-      else if (last.top + last.height / 2 < vh * 0.08) active = FOOTER;
-      else {
-        let best = Infinity;
-        for (let i = 0; i < cards.length; i++) {
-          const r = cards[i].getBoundingClientRect();
-          const d = Math.abs(r.top + r.height / 2 - vh / 2);
-          if (d < best) {
-            best = d;
-            active = i;
-            cardRect = r;
-          }
+    // ── 1. One continuous scroll position ─────────────────────────────────
+    // s = -1 hero · 0..N-1 card k at rest on screen · N footer.
+    // Between two integers the brain is part-way from one state to the next.
+    const portrait = viewport.width < viewport.height * 0.9;
+    const rects = cards.map((c) => c.getBoundingClientRect());
+    // Where a card "rests" while you read it: centred on desktop; on phones
+    // near the bottom of the screen (its place in the section), so the
+    // brain has the free space above it.
+    const restCentre = (h: number) => (portrait ? vh * 0.93 - h / 2 : vh / 2);
+    const offs = rects.map((r) => (r.top + r.height / 2 - restCentre(r.height)) / vh); // 0 = at rest
+    let s: number;
+    if (offs[0] >= 0) s = -Math.min(1, offs[0] / EDGE_TRAVEL);
+    else if (offs[N - 1] <= 0) s = N - 1 + Math.min(1, -offs[N - 1] / EDGE_TRAVEL);
+    else {
+      s = 0;
+      for (let i = 0; i < N - 1; i++)
+        if (offs[i] <= 0 && offs[i + 1] >= 0) {
+          s = i + -offs[i] / Math.max(1e-6, offs[i + 1] - offs[i]);
+          break;
+        }
+    }
+    const a = Math.min(N - 1, Math.floor(s)); // -1..N-1
+    const b = a + 1; // 0..N
+    // Hold still while a card is near the middle, travel between cards
+    const t = smoothstep(Math.min(1, Math.max(0, ((s - a) - HOLD) / (1 - 2 * HOLD))));
+    const atHero = s <= -1 + 1e-4;
+    const atFooter = s >= N - 1e-4;
+    const dominant = t < 0.5 ? a : b;
+    activeRef.current = atHero ? HERO : dominant >= N ? FOOTER : dominant;
+
+    // ── 2. Placement for any state, from the live card positions ──────────
+    const toWorldY = (screenY: number) => (0.5 - screenY / vh) * viewport.height;
+    const heroScale = portrait ? Math.min(1.0, viewport.width / 2.3) : Math.min(1.45, viewport.width * 0.17);
+    const placeFor = (k: number) => {
+      if (k < 0) return { x: 0, y: 0, scale: heroScale };
+      if (k >= N) return { x: 0, y: viewport.height * (portrait ? 0.27 : 0.24), scale: heroScale * 0.6 };
+      const r = rects[k];
+      if (portrait) {
+        // In the free space above the card, moving with it; label kept clear of the navbar
+        const scale = Math.min(0.62, viewport.width / 3.8);
+        const brainPx = 1.45 * scale * (vh / viewport.height);
+        const screenY = Math.max(80 + 64 + brainPx * 0.25, r.top - brainPx / 2 - 14);
+        return { x: 0, y: toWorldY(Math.min(vh * 1.3, screenY)), scale };
+      }
+      // Beside the card, level with its centre (within the middle band)
+      const side = SECTIONS_DATA[k].direction === 'left' ? 1 : -1;
+      const centre = r.top + r.height / 2;
+      return {
+        x: side * viewport.width * 0.23,
+        y: toWorldY(Math.min(vh * 0.68, Math.max(vh * 0.32, centre))),
+        scale: Math.min(1.2, viewport.width * 0.135),
+      };
+    };
+    const pa = placeFor(a);
+    const pb = placeFor(b);
+    placement.position.set(THREE.MathUtils.lerp(pa.x, pb.x, t), THREE.MathUtils.lerp(pa.y, pb.y, t), 0);
+    placement.scale.setScalar(THREE.MathUtils.lerp(pa.scale, pb.scale, t));
+
+    // ── 3. Orientation: idle turn in hero/footer, region views in between ─
+    if ((atHero || atFooter) && !reducedMotion) {
+      spinRef.current += dt * 0.25;
+      moving = true;
+    }
+    const heroQuat = (out: THREE.Quaternion) =>
+      out.setFromAxisAngle(yAxis, Math.sin(spinRef.current) * 0.9).multiply(HERO_QUAT);
+    if (a < 0) heroQuat(quatA);
+    else quatA.copy(REGION_QUATS[a]);
+    if (b >= N) heroQuat(quatB);
+    else quatB.copy(REGION_QUATS[b]);
+    orient.quaternion.copy(quatA).slerp(quatB, t);
+
+    // ── 4. Region highlight, blended between the two states ───────────────
+    const hovered = atHero ? hoveredRef.current : -1;
+    const hs = hoverRef.current;
+    const visFor = (k: number, out: RegionState[]) => {
+      for (let i = 0; i < out.length; i++) {
+        const o = out[i];
+        if (k < 0 || k >= N) {
+          o.opacity = 1;
+          o.emissive = 0.08;
+          o.lift = 0;
+        } else if (i === k) {
+          o.opacity = 1;
+          o.emissive = 0.55;
+          o.lift = 0.12;
+        } else {
+          o.opacity = 0.14;
+          o.emissive = 0;
+          o.lift = 0;
         }
       }
-    }
-    if (active !== lastActiveRef.current) {
-      lastActiveRef.current = active;
-      switchTimeRef.current = 0;
-    }
-    switchTimeRef.current += dt;
-    activeRef.current = active;
-    const inSection = active >= 0 && active < FOOTER;
-
-    // ── Placement: centre in hero, beside the card in sections ─────────────
-    const portrait = viewport.width < viewport.height * 0.9;
-    let tx = 0;
-    let ty = 0;
-    let tScale = portrait ? Math.min(1.0, viewport.width / 2.3) : Math.min(1.45, viewport.width * 0.17);
-    const toWorldY = (screenY: number) => (0.5 - screenY / vh) * viewport.height;
-    if (inSection && cardRect) {
-      const cardOnLeft = SECTIONS_DATA[active].direction === 'left';
-      if (portrait) {
-        // Ride in the free space above the card and scroll together with it
-        tScale = Math.min(0.62, viewport.width / 3.8);
-        const brainPx = 1.45 * tScale * (vh / viewport.height);
-        // ...but never so high that the region label slides under the navbar
-        // (a tall card may then cover the bottom of the brain a little)
-        const minY = 80 + 64 + brainPx * 0.25;
-        const screenY = Math.max(minY, cardRect.top - brainPx / 2 - 14);
-        ty = toWorldY(Math.min(vh * 1.3, screenY));
-      } else {
-        // Beside the card, level with its centre (kept within the middle band)
-        tx = (cardOnLeft ? 1 : -1) * viewport.width * 0.23;
-        tScale = Math.min(1.2, viewport.width * 0.135);
-        const centre = cardRect.top + cardRect.height / 2;
-        ty = toWorldY(Math.min(vh * 0.68, Math.max(vh * 0.32, centre)));
-      }
-    } else if (active === FOOTER) {
-      ty = viewport.height * (portrait ? 0.27 : 0.24);
-      tScale *= 0.6;
-    }
-    // Follow the card tightly; glide more softly right after switching section
-    const following = inSection && switchTimeRef.current > 0.7;
-    const k = reducedMotion ? 1 : damp(4.5, dt);
-    const ky = reducedMotion ? 1 : damp(following ? 14 : 4.5, dt);
-    placement.position.x += (tx - placement.position.x) * k;
-    placement.position.y += (ty - placement.position.y) * ky;
-    const sc = placement.scale.x + (tScale - placement.scale.x) * k;
-    placement.scale.setScalar(sc);
-    if (Math.abs(tx - placement.position.x) + Math.abs(ty - placement.position.y) + Math.abs(tScale - sc) > 1e-3)
-      moving = true;
-
-    // ── Orientation: idle spin outside sections, face the region inside ────
-    if (inSection) {
-      tmpQuat.copy(REGION_QUATS[active]);
-    } else {
-      if (!reducedMotion) {
-        spinRef.current += dt * 0.25;
-        moving = true;
-      }
-      spinQuat.setFromAxisAngle(yAxis, Math.sin(spinRef.current) * 0.9);
-      tmpQuat.copy(spinQuat).multiply(HERO_QUAT);
-    }
-    if (reducedMotion) orient.quaternion.copy(tmpQuat);
-    else orient.quaternion.slerp(tmpQuat, damp(3.5, dt));
-    if (orient.quaternion.angleTo(tmpQuat) > 1e-3) moving = true;
-
-    // ── Region highlight ───────────────────────────────────────────────────
-    const hovered = hoveredRef.current;
-    const mk = reducedMotion ? 1 : damp(7, dt);
+    };
+    visFor(a, visA);
+    visFor(b, visB);
     for (let i = 0; i < regions.length; i++) {
-      const s = state.current[i];
-      const isFocus = inSection ? i === active : i === hovered;
-      const target: RegionState = inSection
-        ? isFocus
-          ? { opacity: 1, emissive: 0.55, lift: 0.12 }
-          : { opacity: 0.14, emissive: 0, lift: 0 }
-        : isFocus
-          ? { opacity: 1, emissive: 0.6, lift: 0.1 }
-          : { opacity: 1, emissive: 0.08, lift: 0 };
-      s.opacity += (target.opacity - s.opacity) * mk;
-      s.emissive += (target.emissive - s.emissive) * mk;
-      s.lift += (target.lift - s.lift) * mk;
-      if (
-        Math.abs(target.opacity - s.opacity) + Math.abs(target.emissive - s.emissive) + Math.abs(target.lift - s.lift) >
-        1e-3
-      )
-        moving = true;
+      // Hover lift/glow in the hero is the only time-based animation left
+      const target = i === hovered ? 1 : 0;
+      hs[i] += (target - hs[i]) * (reducedMotion ? 1 : damp(8, dt));
+      if (Math.abs(target - hs[i]) > 1e-3) moving = true;
+
+      const opacity = THREE.MathUtils.lerp(visA[i].opacity, visB[i].opacity, t);
+      const emissive = THREE.MathUtils.lerp(visA[i].emissive, visB[i].emissive, t) + hs[i] * 0.5;
+      const lift = THREE.MathUtils.lerp(visA[i].lift, visB[i].lift, t) + hs[i] * 0.1;
 
       const m = materials[i];
-      m.opacity = s.opacity;
-      m.emissiveIntensity = s.emissive;
-      m.depthWrite = s.opacity > 0.9; // ghosts must not hide what's behind them
+      m.opacity = opacity;
+      m.emissiveIntensity = emissive;
+      m.depthWrite = opacity > 0.9; // ghosts must not hide what's behind them
       const cm = cutMaterials[i];
       // Inner walls stay subtler than the surface inside the ghost
-      cm.opacity = s.opacity > 0.9 ? s.opacity : s.opacity * 0.7;
+      cm.opacity = opacity > 0.9 ? opacity : opacity * 0.7;
       cm.depthWrite = m.depthWrite;
       const mesh = meshRefs.current[i];
       if (mesh) {
-        mesh.position.copy(regions[i].home).addScaledVector(liftDirs[i], s.lift);
-        mesh.renderOrder = s.opacity > 0.9 ? 0 : 1;
+        mesh.position.copy(regions[i].home).addScaledVector(liftDirs[i], lift);
+        mesh.renderOrder = opacity > 0.9 ? 0 : 1;
       }
     }
 
-    // ── Label pinned to the focused region (DOM, no React re-render) ───────
+    // ── 5. Label on the region in focus, fading out mid-way between cards ─
     const label = labelRef.current;
-    const focus = inSection ? active : hovered;
     if (label) {
-      if (focus !== labelRegionRef.current) {
-        labelRegionRef.current = focus;
-        if (focus >= 0) {
-          const section = SECTIONS_DATA[focus];
-          const name = label.querySelector('[data-label-name]');
-          const sub = label.querySelector('[data-label-section]');
-          if (name) name.textContent = BRAIN_REGIONS[section.region].name;
-          if (sub) sub.textContent = section.title;
-          label.style.setProperty('--accent', section.accentColor);
-        }
-        label.style.opacity = focus >= 0 ? '1' : '0';
+      const focus = atHero ? hovered : dominant < N && dominant >= 0 ? dominant : -1;
+      const alpha = atHero ? (hovered >= 0 ? hs[hovered] : 0) : focus >= 0 ? Math.min(1, Math.abs(1 - 2 * t) * 1.6) : 0;
+      if (focus !== labelRegionRef.current && focus >= 0) {
+        const section = SECTIONS_DATA[focus];
+        const name = label.querySelector('[data-label-name]');
+        const sub = label.querySelector('[data-label-section]');
+        if (name) name.textContent = BRAIN_REGIONS[section.region].name;
+        if (sub) sub.textContent = section.title;
+        label.style.setProperty('--accent', section.accentColor);
       }
+      labelRegionRef.current = focus;
+      label.style.opacity = alpha.toFixed(3);
       const mesh = focus >= 0 ? meshRefs.current[focus] : null;
       if (mesh) {
         mesh.getWorldPosition(tmpVec).project(camera);
@@ -340,7 +347,7 @@ const RegionLabel = ({ labelRef }: BrainProps) => (
   <div
     ref={labelRef}
     aria-hidden="true"
-    className="fixed left-0 top-0 z-[1] pointer-events-none transition-opacity duration-300 will-change-transform"
+    className="fixed left-0 top-0 z-[1] pointer-events-none will-change-[transform,opacity]"
     style={{ opacity: 0 }}
   >
     <div className="flex flex-col items-center -translate-x-1/2 -translate-y-full">
